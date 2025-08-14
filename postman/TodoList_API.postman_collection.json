@@ -1,0 +1,719 @@
+{
+  "info": {
+    "name": "TodoList API",
+    "description": "Complete API collection for TodoList application with authentication, tasks, categories, and tags management",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tag_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(201)) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.token) {",
+                  "        pm.collectionVariables.set('jwt_token', responseJson.data.token);",
+                  "        pm.collectionVariables.set('user_id', responseJson.data.user.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Test User\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user account"
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(200)) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.token) {",
+                  "        pm.collectionVariables.set('jwt_token', responseJson.data.token);",
+                  "        pm.collectionVariables.set('user_id', responseJson.data.user.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Authenticate user and get JWT token"
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Get authenticated user profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Update user profile information"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "change-password"]
+            },
+            "description": "Change user password"
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-token"]
+            },
+            "description": "Verify if JWT token is valid"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout user"
+          }
+        },
+        {
+          "name": "Deactivate Account",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/account",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "account"]
+            },
+            "description": "Deactivate user account"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tasks?completed=false&priority=high&page=1&limit=10&sort_by=created_at&sort_direction=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "completed",
+                  "value": "false",
+                  "description": "Filter by completion status"
+                },
+                {
+                  "key": "category",
+                  "value": "1",
+                  "description": "Filter by category ID",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "high",
+                  "description": "Filter by priority (low, medium, high)"
+                },
+                {
+                  "key": "due_date",
+                  "value": "2025-08-15",
+                  "description": "Filter by due date (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "important",
+                  "description": "Search in title and description",
+                  "disabled": true
+                },
+                {
+                  "key": "tags",
+                  "value": "1,2,3",
+                  "description": "Filter by tag IDs (comma-separated)",
+                  "disabled": true
+                },
+                {
+                  "key": "sort_by",
+                  "value": "created_at",
+                  "description": "Sort field (created_at, due_date, priority, title)"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "desc",
+                  "description": "Sort direction (asc, desc)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get all user tasks with filters and pagination"
+          }
+        },
+        {
+          "name": "Get Task by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}"]
+            },
+            "description": "Get a specific task by ID"
+          }
+        },
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(201)) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.id) {",
+                  "        pm.collectionVariables.set('task_id', responseJson.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete project documentation\",\n  \"description\": \"Write comprehensive documentation for the TodoList API\",\n  \"category_id\": 1,\n  \"priority\": \"high\",\n  \"due_date\": \"2025-08-20\",\n  \"tags\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks"]
+            },
+            "description": "Create a new task"
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated task title\",\n  \"description\": \"Updated task description\",\n  \"category_id\": 2,\n  \"priority\": \"medium\",\n  \"due_date\": \"2025-08-25\",\n  \"completed\": false,\n  \"tags\": [1, 3]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}"]
+            },
+            "description": "Update an existing task"
+          }
+        },
+        {
+          "name": "Toggle Task Complete",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}", "complete"]
+            },
+            "description": "Mark task as completed or pending"
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}"]
+            },
+            "description": "Delete a task"
+          }
+        },
+        {
+          "name": "Get Task Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tasks/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "statistics"]
+            },
+            "description": "Get user task statistics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Get all user categories"
+          }
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", "{{category_id}}"]
+            },
+            "description": "Get a specific category by ID"
+          }
+        },
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(201)) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.id) {",
+                  "        pm.collectionVariables.set('category_id', responseJson.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Work\",\n  \"description\": \"Work-related tasks\",\n  \"color\": \"#3B82F6\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Create a new category"
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Work\",\n  \"description\": \"Updated work-related tasks\",\n  \"color\": \"#10B981\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", "{{category_id}}"]
+            },
+            "description": "Update an existing category"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", "{{category_id}}"]
+            },
+            "description": "Delete a category (only if no tasks are associated)"
+          }
+        },
+        {
+          "name": "Force Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}/force",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", "{{category_id}}", "force"]
+            },
+            "description": "Force delete category (moves tasks to no category)"
+          }
+        },
+        {
+          "name": "Get Category Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories/{{category_id}}/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories", "{{category_id}}", "statistics"]
+            },
+            "description": "Get category statistics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "item": [
+        {
+          "name": "Get All Tags",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "Get all user tags"
+          }
+        },
+        {
+          "name": "Get Tag by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "{{tag_id}}"]
+            },
+            "description": "Get a specific tag by ID"
+          }
+        },
+        {
+          "name": "Get Most Used Tags",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags/most-used?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "most-used"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of tags to return"
+                }
+              ]
+            },
+            "description": "Get user's most used tags"
+          }
+        },
+        {
+          "name": "Create Tag",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.to.have.status(201)) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.id) {",
+                  "        pm.collectionVariables.set('tag_id', responseJson.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"urgent\",\n  \"color\": \"#EF4444\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "Create a new tag"
+          }
+        },
+        {
+          "name": "Update Tag",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"very-urgent\",\n  \"color\": \"#DC2626\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "{{tag_id}}"]
+            },
+            "description": "Update an existing tag"
+          }
+        },
+        {
+          "name": "Delete Tag",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "{{tag_id}}"]
+            },
+            "description": "Delete a tag (only if no tasks are associated)"
+          }
+        },
+        {
+          "name": "Force Delete Tag",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags/{{tag_id}}/force",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "{{tag_id}}", "force"]
+            },
+            "description": "Force delete tag (removes associations with tasks)"
+          }
+        },
+        {
+          "name": "Get Tag Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags/{{tag_id}}/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "{{tag_id}}", "statistics"]
+            },
+            "description": "Get tag statistics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check API health status"
+          }
+        }
+      ]
+    }
+  ]
+}
