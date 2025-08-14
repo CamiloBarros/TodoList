@@ -60,7 +60,7 @@ export interface Tarea {
   completada_en?: Date;
   creado_en: Date;
   actualizado_en: Date;
-  
+
   // Relaciones
   categoria?: Categoria;
   etiquetas?: Etiqueta[];
@@ -91,10 +91,23 @@ export interface Etiqueta {
   nombre: string;
   color: string;
   creado_en: Date;
+  actualizado_en?: Date;
+  uso_count?: number;
 }
 
 export interface EtiquetaCreacion {
   nombre: string;
+  color?: string;
+}
+
+// DTOs para etiquetas
+export interface CrearEtiquetaDTO {
+  nombre: string;
+  color?: string;
+}
+
+export interface ActualizarEtiquetaDTO {
+  nombre?: string;
   color?: string;
 }
 
@@ -276,6 +289,63 @@ export interface EstadisticasUsuario {
     completadas: number;
     creadas: number;
   }[];
+}
+
+export interface EstadisticasCategoria {
+  categoria_id: number;
+  nombre: string;
+  color: string;
+  total_tareas: number;
+  tareas_completadas: number;
+  tareas_pendientes: number;
+  tareas_vencidas: number;
+  distribucion_prioridad: {
+    alta: number;
+    media: number;
+    baja: number;
+  };
+  porcentaje_completado: number;
+}
+
+export interface EstadisticasEtiqueta {
+  etiqueta_id: number;
+  nombre: string;
+  color: string;
+  total_tareas: number;
+  tareas_completadas: number;
+  tareas_pendientes: number;
+  tareas_vencidas: number;
+  distribucion_prioridad: {
+    alta: number;
+    media: number;
+    baja: number;
+  };
+  porcentaje_completado: number;
+}
+
+// Enums y códigos de error
+export enum ErrorCode {
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
+  AUTHORIZATION_ERROR = 'AUTHORIZATION_ERROR',
+  NOT_FOUND_ERROR = 'NOT_FOUND_ERROR',
+  CONFLICT_ERROR = 'CONFLICT_ERROR',
+  DATABASE_ERROR = 'DATABASE_ERROR',
+  INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  RATE_LIMIT_ERROR = 'RATE_LIMIT_ERROR',
+  FILE_UPLOAD_ERROR = 'FILE_UPLOAD_ERROR'
+}
+
+export class DatabaseError extends Error {
+  public code: ErrorCode;
+  public details?: string;
+
+  constructor(message: string, code: ErrorCode, details?: string) {
+    super(message);
+    this.name = 'DatabaseError';
+    this.code = code;
+    this.details = details;
+  }
 }
 
 // Health Check
