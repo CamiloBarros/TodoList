@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as categoriasController from '../controllers/categoriasController';
+import * as categoriesController from '../controllers/categoriesController';
 import { authenticateToken } from '../middleware/auth';
 import {
   validateCrearCategoria,
@@ -17,21 +17,21 @@ router.use(authenticateToken);
  * @desc    Obtener todas las categorías del usuario
  * @access  Private
  */
-router.get('/', categoriasController.obtenerCategorias as any);
+router.get('/', categoriesController.obtenerCategorias as any);
 
 /**
  * @route   GET /api/categorias/:id
  * @desc    Obtener una categoría específica por ID
  * @access  Private
  */
-router.get('/:id', ...validateIdParam, categoriasController.obtenerCategoriaPorId as any);
+router.get('/:id', ...validateIdParam, categoriesController.obtenerCategoriaPorId as any);
 
 /**
  * @route   GET /api/categorias/:id/estadisticas
  * @desc    Obtener estadísticas de una categoría (número de tareas)
  * @access  Private
  */
-router.get('/:id/estadisticas', ...validateIdParam, categoriasController.obtenerEstadisticasCategoria as any);
+router.get('/:id/estadisticas', ...validateIdParam, categoriesController.obtenerEstadisticasCategoria as any);
 
 /**
  * @route   POST /api/categorias
@@ -39,7 +39,7 @@ router.get('/:id/estadisticas', ...validateIdParam, categoriasController.obtener
  * @access  Private
  * @body    { nombre, descripcion?, color? }
  */
-router.post('/', ...validateCrearCategoria, categoriasController.crearCategoria as any);
+router.post('/', ...validateCrearCategoria, categoriesController.crearCategoria as any);
 
 /**
  * @route   PUT /api/categorias/:id
@@ -47,20 +47,20 @@ router.post('/', ...validateCrearCategoria, categoriasController.crearCategoria 
  * @access  Private
  * @body    { nombre?, descripcion?, color? }
  */
-router.put('/:id', ...validateActualizarCategoria, categoriasController.actualizarCategoria as any);
+router.put('/:id', ...validateActualizarCategoria, categoriesController.actualizarCategoria as any);
 
 /**
  * @route   DELETE /api/categorias/:id
  * @desc    Eliminar una categoría (solo si no tiene tareas asociadas)
  * @access  Private
  */
-router.delete('/:id', ...validateIdParam, categoriasController.eliminarCategoria as any);
+router.delete('/:id', ...validateIdParam, categoriesController.eliminarCategoria as any);
 
 /**
  * @route   DELETE /api/categorias/:id/forzar
  * @desc    Eliminar una categoría forzadamente (mueve las tareas a "sin categoría")
  * @access  Private
  */
-router.delete('/:id/forzar', ...validateIdParam, categoriasController.eliminarCategoriaForzar as any);
+router.delete('/:id/forzar', ...validateIdParam, categoriesController.eliminarCategoriaForzar as any);
 
 export default router;

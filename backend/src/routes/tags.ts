@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as etiquetasController from '../controllers/etiquetasController';
+import * as tagsController from '../controllers/tagsController';
 import { authenticateToken } from '../middleware/auth';
 import {
   validateCrearEtiqueta,
@@ -17,7 +17,7 @@ router.use(authenticateToken);
  * @desc    Obtener todas las etiquetas del usuario
  * @access  Private
  */
-router.get('/', etiquetasController.obtenerEtiquetas as any);
+router.get('/', tagsController.obtenerEtiquetas as any);
 
 /**
  * @route   GET /api/etiquetas/mas-usadas
@@ -25,21 +25,21 @@ router.get('/', etiquetasController.obtenerEtiquetas as any);
  * @access  Private
  * @query   ?limite=10
  */
-router.get('/mas-usadas', etiquetasController.obtenerEtiquetasMasUsadas as any);
+router.get('/mas-usadas', tagsController.obtenerEtiquetasMasUsadas as any);
 
 /**
  * @route   GET /api/etiquetas/:id
  * @desc    Obtener una etiqueta específica por ID
  * @access  Private
  */
-router.get('/:id', ...validateIdParam, etiquetasController.obtenerEtiquetaPorId as any);
+router.get('/:id', ...validateIdParam, tagsController.obtenerEtiquetaPorId as any);
 
 /**
  * @route   GET /api/etiquetas/:id/estadisticas
  * @desc    Obtener estadísticas de una etiqueta (número de tareas por estado)
  * @access  Private
  */
-router.get('/:id/estadisticas', ...validateIdParam, etiquetasController.obtenerEstadisticasEtiqueta as any);
+router.get('/:id/estadisticas', ...validateIdParam, tagsController.obtenerEstadisticasEtiqueta as any);
 
 /**
  * @route   POST /api/etiquetas
@@ -47,7 +47,7 @@ router.get('/:id/estadisticas', ...validateIdParam, etiquetasController.obtenerE
  * @access  Private
  * @body    { nombre, color? }
  */
-router.post('/', ...validateCrearEtiqueta, etiquetasController.crearEtiqueta as any);
+router.post('/', ...validateCrearEtiqueta, tagsController.crearEtiqueta as any);
 
 /**
  * @route   PUT /api/etiquetas/:id
@@ -55,20 +55,20 @@ router.post('/', ...validateCrearEtiqueta, etiquetasController.crearEtiqueta as 
  * @access  Private
  * @body    { nombre?, color? }
  */
-router.put('/:id', ...validateActualizarEtiqueta, etiquetasController.actualizarEtiqueta as any);
+router.put('/:id', ...validateActualizarEtiqueta, tagsController.actualizarEtiqueta as any);
 
 /**
  * @route   DELETE /api/etiquetas/:id
  * @desc    Eliminar una etiqueta (solo si no tiene tareas asociadas)
  * @access  Private
  */
-router.delete('/:id', ...validateIdParam, etiquetasController.eliminarEtiqueta as any);
+router.delete('/:id', ...validateIdParam, tagsController.eliminarEtiqueta as any);
 
 /**
  * @route   DELETE /api/etiquetas/:id/forzar
  * @desc    Eliminar una etiqueta forzadamente (removiendo asociaciones con tareas)
  * @access  Private
  */
-router.delete('/:id/forzar', ...validateIdParam, etiquetasController.eliminarEtiquetaForzar as any);
+router.delete('/:id/forzar', ...validateIdParam, tagsController.eliminarEtiquetaForzar as any);
 
 export default router;

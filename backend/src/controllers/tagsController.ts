@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { validationResult } from 'express-validator';
 import { AuthenticatedRequest } from '../types';
-import * as etiquetasService from '../services/etiquetasService';
+import * as tagsService from '../services/tagsService';
 
 /**
  * Obtener todas las etiquetas del usuario
@@ -12,7 +12,7 @@ export const obtenerEtiquetas = async (
 ): Promise<void> => {
   try {
     const usuarioId = req.user.id;
-    const etiquetas = await etiquetasService.obtenerEtiquetas(usuarioId);
+    const etiquetas = await tagsService.obtenerEtiquetas(usuarioId);
 
     res.status(200).json({
       success: true,
@@ -65,7 +65,7 @@ export const obtenerEtiquetaPorId = async (
     const usuarioId = req.user.id;
     const etiquetaId = parseInt(req.params.id as string);
 
-    const etiqueta = await etiquetasService.obtenerEtiquetaPorId(etiquetaId, usuarioId);
+    const etiqueta = await tagsService.obtenerEtiquetaPorId(etiquetaId, usuarioId);
 
     if (!etiqueta) {
       res.status(404).json({
@@ -126,7 +126,7 @@ export const crearEtiqueta = async (
     const usuarioId = req.user.id;
     const etiquetaData = req.body;
 
-    const nuevaEtiqueta = await etiquetasService.crearEtiqueta(etiquetaData, usuarioId);
+    const nuevaEtiqueta = await tagsService.crearEtiqueta(etiquetaData, usuarioId);
 
     res.status(201).json({
       success: true,
@@ -191,7 +191,7 @@ export const actualizarEtiqueta = async (
     const etiquetaId = parseInt(req.params.id as string);
     const etiquetaData = req.body;
 
-    const etiquetaActualizada = await etiquetasService.actualizarEtiqueta(
+    const etiquetaActualizada = await tagsService.actualizarEtiqueta(
       etiquetaId,
       etiquetaData,
       usuarioId
@@ -272,7 +272,7 @@ export const eliminarEtiqueta = async (
     const usuarioId = req.user.id;
     const etiquetaId = parseInt(req.params.id as string);
 
-    const resultado = await etiquetasService.eliminarEtiqueta(etiquetaId, usuarioId);
+    const resultado = await tagsService.eliminarEtiqueta(etiquetaId, usuarioId);
 
     if (!resultado.eliminada) {
       if (resultado.mensaje === 'Etiqueta no encontrada') {
@@ -345,7 +345,7 @@ export const eliminarEtiquetaForzar = async (
     const usuarioId = req.user.id;
     const etiquetaId = parseInt(req.params.id as string);
 
-    const resultado = await etiquetasService.eliminarEtiquetaForzar(etiquetaId, usuarioId);
+    const resultado = await tagsService.eliminarEtiquetaForzar(etiquetaId, usuarioId);
 
     if (!resultado.eliminada) {
       res.status(404).json({
@@ -409,7 +409,7 @@ export const obtenerEstadisticasEtiqueta = async (
     const usuarioId = req.user.id;
     const etiquetaId = parseInt(req.params.id as string);
 
-    const estadisticas = await etiquetasService.obtenerEstadisticasEtiqueta(etiquetaId, usuarioId);
+    const estadisticas = await tagsService.obtenerEstadisticasEtiqueta(etiquetaId, usuarioId);
 
     if (!estadisticas) {
       res.status(404).json({
@@ -468,7 +468,7 @@ export const obtenerEtiquetasMasUsadas = async (
       return;
     }
 
-    const etiquetas = await etiquetasService.obtenerEtiquetasMasUsadas(usuarioId, limite);
+    const etiquetas = await tagsService.obtenerEtiquetasMasUsadas(usuarioId, limite);
 
     res.status(200).json({
       success: true,

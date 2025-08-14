@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as tareasController from '../controllers/tareasController';
+import * as tasksController from '../controllers/tasksController';
 import { authenticateToken } from '../middleware/auth';
 import {
   validateCrearTarea,
@@ -31,21 +31,21 @@ const validateToggleCompletar = [
  *          &busqueda=texto&etiquetas=1,2,3&ordenar=creado_en&direccion=desc
  *          &page=1&limit=20
  */
-router.get('/', ...validateFiltrosTareas, tareasController.obtenerTareas as any);
+router.get('/', ...validateFiltrosTareas, tasksController.obtenerTareas as any);
 
 /**
  * @route   GET /api/tareas/estadisticas
  * @desc    Obtener estadísticas de las tareas del usuario
  * @access  Private
  */
-router.get('/estadisticas', tareasController.obtenerEstadisticasTareas as any);
+router.get('/estadisticas', tasksController.obtenerEstadisticasTareas as any);
 
 /**
  * @route   GET /api/tareas/:id
  * @desc    Obtener una tarea específica por ID
  * @access  Private
  */
-router.get('/:id', ...validateIdParam, tareasController.obtenerTareaPorId as any);
+router.get('/:id', ...validateIdParam, tasksController.obtenerTareaPorId as any);
 
 /**
  * @route   POST /api/tareas
@@ -53,7 +53,7 @@ router.get('/:id', ...validateIdParam, tareasController.obtenerTareaPorId as any
  * @access  Private
  * @body    { titulo, descripcion?, categoria_id?, prioridad?, fecha_vencimiento?, etiquetas? }
  */
-router.post('/', ...validateCrearTarea, tareasController.crearTarea as any);
+router.post('/', ...validateCrearTarea, tasksController.crearTarea as any);
 
 /**
  * @route   PUT /api/tareas/:id
@@ -61,7 +61,7 @@ router.post('/', ...validateCrearTarea, tareasController.crearTarea as any);
  * @access  Private
  * @body    { titulo?, descripcion?, categoria_id?, prioridad?, fecha_vencimiento?, completada?, etiquetas? }
  */
-router.put('/:id', ...validateActualizarTarea, tareasController.actualizarTarea as any);
+router.put('/:id', ...validateActualizarTarea, tasksController.actualizarTarea as any);
 
 /**
  * @route   PATCH /api/tareas/:id/completar
@@ -69,13 +69,13 @@ router.put('/:id', ...validateActualizarTarea, tareasController.actualizarTarea 
  * @access  Private
  * @body    { completada: boolean }
  */
-router.patch('/:id/completar', ...validateIdParam, ...validateToggleCompletar, tareasController.toggleCompletarTarea as any);
+router.patch('/:id/completar', ...validateIdParam, ...validateToggleCompletar, tasksController.toggleCompletarTarea as any);
 
 /**
  * @route   DELETE /api/tareas/:id
  * @desc    Eliminar una tarea
  * @access  Private
  */
-router.delete('/:id', ...validateIdParam, tareasController.eliminarTarea as any);
+router.delete('/:id', ...validateIdParam, tasksController.eliminarTarea as any);
 
 export default router;

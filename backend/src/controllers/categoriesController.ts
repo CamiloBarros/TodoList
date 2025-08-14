@@ -1,32 +1,19 @@
 import { Response } from 'express';
-import { AuthenticatedRequest, FiltrosTareas } from '../types';
-import * as tareasService from '../services/tareasService';
+import { AuthenticatedRequest } from '../types';
+import * as categoriesService from '../services/categoriesService';
 
 /**
- * Controller de Tareas
- * Maneja todas las rutas relacionadas con la gestión de tareas
+ * Controller de Categorías
+ * Maneja todas las rutas relacionadas con la gestión de categorías
  */
 
 /**
- * GET /api/tareas
- * Obtiene todas las tareas del usuario con filtros y paginación
+ * GET /api/categorias
+ * Obtiene todas las categorías del usuario
  */
-export const obtenerTareas = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const obtenerCategorias = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const filtros: FiltrosTareas = {
-      completada: req.query.completada ? req.query.completada === 'true' : undefined,
-      categoria: req.query.categoria ? parseInt(req.query.categoria as string) : undefined,
-      prioridad: req.query.prioridad as any,
-      fecha_vencimiento: req.query.fecha_vencimiento as string,
-      busqueda: req.query.busqueda as string,
-      etiquetas: req.query.etiquetas as string,
-      ordenar: req.query.ordenar as any,
-      direccion: req.query.direccion as any,
-      page: req.query.page ? parseInt(req.query.page as string) : undefined,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-    };
-
-    const resultado = await tareasService.obtenerTareas(req.user.id, filtros);
+    const resultado = await categoriesService.obtenerCategorias(req.user.id);
 
     if (resultado.success) {
       res.status(200).json({
@@ -45,7 +32,7 @@ export const obtenerTareas = async (req: AuthenticatedRequest, res: Response): P
       });
     }
   } catch (error) {
-    console.error('Error en obtener tareas controller:', error);
+    console.error('Error en obtener categorías controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -59,18 +46,18 @@ export const obtenerTareas = async (req: AuthenticatedRequest, res: Response): P
 };
 
 /**
- * GET /api/tareas/:id
- * Obtiene una tarea específica por ID
+ * GET /api/categorias/:id
+ * Obtiene una categoría específica por ID
  */
-export const obtenerTareaPorId = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const obtenerCategoriaPorId = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const categoriaId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(categoriaId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de categoría inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -79,7 +66,7 @@ export const obtenerTareaPorId = async (req: AuthenticatedRequest, res: Response
       return;
     }
 
-    const resultado = await tareasService.obtenerTareaPorId(tareaId, req.user.id);
+    const resultado = await categoriesService.obtenerCategoriaPorId(categoriaId, req.user.id);
 
     if (resultado.success) {
       res.status(200).json({
@@ -87,7 +74,7 @@ export const obtenerTareaPorId = async (req: AuthenticatedRequest, res: Response
         data: resultado.data,
       });
     } else {
-      const statusCode = resultado.error === 'Tarea no encontrada' ? 404 : 500;
+      const statusCode = resultado.error === 'Categoría no encontrada' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
@@ -99,7 +86,7 @@ export const obtenerTareaPorId = async (req: AuthenticatedRequest, res: Response
       });
     }
   } catch (error) {
-    console.error('Error en obtener tarea por ID controller:', error);
+    console.error('Error en obtener categoría por ID controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -113,20 +100,17 @@ export const obtenerTareaPorId = async (req: AuthenticatedRequest, res: Response
 };
 
 /**
- * POST /api/tareas
- * Crea una nueva tarea
+ * POST /api/categorias
+ * Crea una nueva categoría
  */
-export const crearTarea = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const crearCategoria = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { titulo, descripcion, categoria_id, prioridad, fecha_vencimiento, etiquetas } = req.body;
+    const { nombre, descripcion, color } = req.body;
 
-    const resultado = await tareasService.crearTarea(req.user.id, {
-      titulo,
+    const resultado = await categoriesService.crearCategoria(req.user.id, {
+      nombre,
       descripcion,
-      categoria_id,
-      prioridad,
-      fecha_vencimiento,
-      etiquetas,
+      color,
     });
 
     if (resultado.success) {
@@ -136,22 +120,19 @@ export const crearTarea = async (req: AuthenticatedRequest, res: Response): Prom
         message: resultado.message,
       });
     } else {
-      const statusCode = 
-        resultado.error?.includes('no encontrada') || 
-        resultado.error?.includes('no pertenece') ? 400 : 500;
-      
+      const statusCode = resultado.error === 'Ya existe una categoría con ese nombre' ? 409 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
           message: resultado.error,
-          type: statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
+          type: statusCode === 409 ? 'CONFLICT' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
         },
       });
     }
   } catch (error) {
-    console.error('Error en crear tarea controller:', error);
+    console.error('Error en crear categoría controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -165,18 +146,18 @@ export const crearTarea = async (req: AuthenticatedRequest, res: Response): Prom
 };
 
 /**
- * PUT /api/tareas/:id
- * Actualiza una tarea existente
+ * PUT /api/categorias/:id
+ * Actualiza una categoría existente
  */
-export const actualizarTarea = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const actualizarCategoria = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const categoriaId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(categoriaId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de categoría inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -185,16 +166,12 @@ export const actualizarTarea = async (req: AuthenticatedRequest, res: Response):
       return;
     }
 
-    const { titulo, descripcion, categoria_id, prioridad, fecha_vencimiento, completada, etiquetas } = req.body;
+    const { nombre, descripcion, color } = req.body;
 
-    const resultado = await tareasService.actualizarTarea(tareaId, req.user.id, {
-      titulo,
+    const resultado = await categoriesService.actualizarCategoria(categoriaId, req.user.id, {
+      nombre,
       descripcion,
-      categoria_id,
-      prioridad,
-      fecha_vencimiento,
-      completada,
-      etiquetas,
+      color,
     });
 
     if (resultado.success) {
@@ -205,16 +182,16 @@ export const actualizarTarea = async (req: AuthenticatedRequest, res: Response):
       });
     } else {
       const statusCode = 
-        resultado.error === 'Tarea no encontrada' ? 404 :
-        resultado.error?.includes('no encontrada') || 
-        resultado.error?.includes('no pertenece') || 
-        resultado.error?.includes('No hay datos') ? 400 : 500;
+        resultado.error === 'Categoría no encontrada' ? 404 :
+        resultado.error === 'Ya existe una categoría con ese nombre' ? 409 :
+        resultado.error === 'No hay datos para actualizar' ? 400 : 500;
       
       res.status(statusCode).json({
         success: false,
         error: {
           message: resultado.error,
           type: statusCode === 404 ? 'NOT_FOUND' : 
+                statusCode === 409 ? 'CONFLICT' :
                 statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -222,7 +199,7 @@ export const actualizarTarea = async (req: AuthenticatedRequest, res: Response):
       });
     }
   } catch (error) {
-    console.error('Error en actualizar tarea controller:', error);
+    console.error('Error en actualizar categoría controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -236,18 +213,18 @@ export const actualizarTarea = async (req: AuthenticatedRequest, res: Response):
 };
 
 /**
- * DELETE /api/tareas/:id
- * Elimina una tarea
+ * DELETE /api/categorias/:id
+ * Elimina una categoría (solo si no tiene tareas asociadas)
  */
-export const eliminarTarea = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const eliminarCategoria = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const categoriaId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(categoriaId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de categoría inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -256,7 +233,7 @@ export const eliminarTarea = async (req: AuthenticatedRequest, res: Response): P
       return;
     }
 
-    const resultado = await tareasService.eliminarTarea(tareaId, req.user.id);
+    const resultado = await categoriesService.eliminarCategoria(categoriaId, req.user.id);
 
     if (resultado.success) {
       res.status(200).json({
@@ -264,19 +241,23 @@ export const eliminarTarea = async (req: AuthenticatedRequest, res: Response): P
         message: resultado.message,
       });
     } else {
-      const statusCode = resultado.error === 'Tarea no encontrada' ? 404 : 500;
+      const statusCode = 
+        resultado.error === 'Categoría no encontrada' ? 404 :
+        resultado.error?.includes('tiene') && resultado.error?.includes('tarea') ? 409 : 500;
+      
       res.status(statusCode).json({
         success: false,
         error: {
           message: resultado.error,
-          type: statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR',
+          type: statusCode === 404 ? 'NOT_FOUND' : 
+                statusCode === 409 ? 'CONFLICT' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
         },
       });
     }
   } catch (error) {
-    console.error('Error en eliminar tarea controller:', error);
+    console.error('Error en eliminar categoría controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -290,18 +271,18 @@ export const eliminarTarea = async (req: AuthenticatedRequest, res: Response): P
 };
 
 /**
- * PATCH /api/tareas/:id/completar
- * Marca una tarea como completada o pendiente
+ * DELETE /api/categorias/:id/forzar
+ * Elimina una categoría forzadamente (mueve las tareas a "sin categoría")
  */
-export const toggleCompletarTarea = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const eliminarCategoriaForzar = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const categoriaId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(categoriaId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de categoría inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -310,33 +291,15 @@ export const toggleCompletarTarea = async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
-    const { completada } = req.body;
-
-    if (typeof completada !== 'boolean') {
-      res.status(400).json({
-        success: false,
-        error: {
-          message: 'El campo completada debe ser true o false',
-          type: 'VALIDATION_ERROR',
-          statusCode: 400,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    const resultado = await tareasService.actualizarTarea(tareaId, req.user.id, {
-      completada,
-    });
+    const resultado = await categoriesService.eliminarCategoriaConTareas(categoriaId, req.user.id);
 
     if (resultado.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
-        message: `Tarea marcada como ${completada ? 'completada' : 'pendiente'}`,
+        message: resultado.message,
       });
     } else {
-      const statusCode = resultado.error === 'Tarea no encontrada' ? 404 : 500;
+      const statusCode = resultado.error === 'Categoría no encontrada' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
@@ -348,7 +311,7 @@ export const toggleCompletarTarea = async (req: AuthenticatedRequest, res: Respo
       });
     }
   } catch (error) {
-    console.error('Error en toggle completar tarea controller:', error);
+    console.error('Error en eliminar categoría forzar controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -362,12 +325,27 @@ export const toggleCompletarTarea = async (req: AuthenticatedRequest, res: Respo
 };
 
 /**
- * GET /api/tareas/estadisticas
- * Obtiene estadísticas de las tareas del usuario
+ * GET /api/categorias/:id/estadisticas
+ * Obtiene estadísticas de una categoría
  */
-export const obtenerEstadisticasTareas = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const obtenerEstadisticasCategoria = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const resultado = await tareasService.obtenerEstadisticasTareas(req.user.id);
+    const categoriaId = parseInt(req.params.id || '0');
+
+    if (isNaN(categoriaId)) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'ID de categoría inválido',
+          type: 'VALIDATION_ERROR',
+          statusCode: 400,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    const resultado = await categoriesService.obtenerEstadisticasCategoria(categoriaId, req.user.id);
 
     if (resultado.success) {
       res.status(200).json({
@@ -386,7 +364,7 @@ export const obtenerEstadisticasTareas = async (req: AuthenticatedRequest, res: 
       });
     }
   } catch (error) {
-    console.error('Error en obtener estadísticas de tareas controller:', error);
+    console.error('Error en obtener estadísticas categoría controller:', error);
     res.status(500).json({
       success: false,
       error: {
