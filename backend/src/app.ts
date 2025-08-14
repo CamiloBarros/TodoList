@@ -9,6 +9,7 @@ import { Server } from 'http';
 // Import configuration and database
 import appConfig, { printConfigSummary } from './config/env';
 import { initializeDatabases, closeDatabases } from './config/database';
+import { setupSwagger } from './config/swagger';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -97,6 +98,74 @@ if (config.NODE_ENV !== 'test') {
 }
 
 /**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health Check del servidor
+ *     description: Endpoint para verificar el estado de salud del servidor y la API
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Servidor funcionando correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "OK"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2024-12-11T15:30:00.000Z"
+ *                 environment:
+ *                   type: string
+ *                   example: "development"
+ *                 version:
+ *                   type: string
+ *                   example: "1.0.0"
+ *                 uptime:
+ *                   type: integer
+ *                   description: Tiempo de actividad del servidor en segundos
+ *                   example: 3600
+ *                 memory:
+ *                   type: object
+ *                   properties:
+ *                     used:
+ *                       type: number
+ *                       description: Memoria usada en MB
+ *                       example: 45.67
+ *                     total:
+ *                       type: number
+ *                       description: Memoria total disponible en MB
+ *                       example: 128.45
+ *             example:
+ *               status: "OK"
+ *               timestamp: "2024-12-11T15:30:00.000Z"
+ *               environment: "development"
+ *               version: "1.0.0"
+ *               uptime: 3600
+ *               memory:
+ *                 used: 45.67
+ *                 total: 128.45
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ERROR"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ *
  * Health check endpoint
  */
 app.get('/health', async (req: Request, res: Response): Promise<void> => {
@@ -145,6 +214,11 @@ app.get('/api', (req: Request, res: Response): void => {
     documentation: '/api/docs',
   });
 });
+
+/**
+ * Setup Swagger Documentation
+ */
+setupSwagger(app);
 
 // API Routes will be added here in Phase 3
 app.use('/api/auth', authRoutes);
