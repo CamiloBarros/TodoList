@@ -12,14 +12,14 @@ services:
       POSTGRES_PASSWORD: todolist_password
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/migrations:/docker-entrypoint-initdb.d
     networks:
       - todolist_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U todolist_user -d todolist_db"]
+      test: ['CMD-SHELL', 'pg_isready -U todolist_user -d todolist_db']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,14 +30,14 @@ services:
     container_name: todolist_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
       - todolist_network
     command: redis-server --appendonly yes --requirepass todolist_redis_password
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -68,7 +68,7 @@ services:
       RATE_LIMIT_WINDOW_MS: 900000
       RATE_LIMIT_MAX_REQUESTS: 100
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -91,7 +91,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin123
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
-      - "8080:80"
+      - '8080:80'
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
