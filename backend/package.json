@@ -1,0 +1,147 @@
+{
+  "name": "todolist-backend",
+  "version": "1.0.0",
+  "description": "Backend API for TodoList application with Node.js, Express, PostgreSQL and TypeScript",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch --detectOpenHandles",
+    "test:coverage": "jest --coverage --detectOpenHandles",
+    "test:integration": "jest --testPathPattern=integration --detectOpenHandles",
+    "db:migrate": "ts-node src/scripts/migrate.ts migrate",
+    "db:seed": "ts-node src/scripts/seed.ts seed",
+    "db:reset": "ts-node src/scripts/migrate.ts reset",
+    "db:status": "ts-node src/scripts/migrate.ts status",
+    "lint": "eslint src/ --fix --ext .ts",
+    "lint:check": "eslint src/ --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f backend",
+    "docker:build": "docker-compose build backend"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "postgresql",
+    "jwt",
+    "rest-api",
+    "todolist",
+    "docker"
+  ],
+  "author": "TodoList Development Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "pg-pool": "^3.6.2",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.13.3",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0",
+    "express-rate-limit": "^7.4.0",
+    "redis": "^4.7.0",
+    "dotenv": "^16.4.5",
+    "winston": "^3.14.2",
+    "compression": "^1.7.4",
+    "express-validator": "^7.2.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "typescript": "^5.5.4",
+    "ts-node": "^10.9.2",
+    "@types/node": "^22.5.0",
+    "@types/express": "^4.17.21",
+    "@types/pg": "^8.11.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/morgan": "^1.9.9",
+    "@types/cors": "^2.8.17",
+    "@types/compression": "^1.7.5",
+    "@types/multer": "^1.4.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.4",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2",
+    "eslint": "^9.9.1",
+    "@typescript-eslint/parser": "^8.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.2.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "@types/jest": "^29.5.12",
+    "jest-environment-node": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/todolist-backend"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/scripts/**",
+      "!src/config/**",
+      "!src/**/*.d.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/coverage/",
+      "/dist/"
+    ],
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    }
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "es2022": true,
+      "jest": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint"],
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module",
+      "project": "./tsconfig.json"
+    },
+    "rules": {
+      "no-console": "warn",
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/explicit-function-return-type": "warn"
+    }
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 80,
+    "tabWidth": 2
+  }
+}
