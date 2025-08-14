@@ -12,13 +12,17 @@ export class AppError extends Error {
   public isOperational: boolean;
   public timestamp: string;
 
-  constructor(message: string, statusCode: number = 500, isOperational: boolean = true) {
+  constructor(
+    message: string,
+    statusCode: number = 500,
+    isOperational: boolean = true
+  ) {
     super(message);
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.timestamp = new Date().toISOString();
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -79,7 +83,7 @@ interface JoiValidationError extends Error {
  */
 const formatErrorResponse = (error: AppError, req: Request): ApiError => {
   const isDevelopment = config.NODE_ENV === 'development';
-  
+
   const errorResponse: ApiError = {
     success: false,
     error: {
@@ -87,14 +91,14 @@ const formatErrorResponse = (error: AppError, req: Request): ApiError => {
       type: error.name,
       statusCode: error.statusCode,
       timestamp: error.timestamp || new Date().toISOString(),
-    }
+    },
   };
-  
+
   // Add field information for validation errors
   if (error instanceof ValidationError && error.field) {
     errorResponse.error.field = error.field;
   }
-  
+
   // Add request information in development
   if (isDevelopment) {
     errorResponse.error.stack = error.stack;
@@ -105,14 +109,17 @@ const formatErrorResponse = (error: AppError, req: Request): ApiError => {
       userAgent: req.get('User-Agent') || '',
     };
   }
-  
+
   return errorResponse;
 };
 
 /**
  * Log error with appropriate level
  */
-const logError = (error: AppError, req: Request | AuthenticatedRequest): void => {
+const logError = (
+  error: AppError,
+  req: Request | AuthenticatedRequest
+): void => {
   const logData = {
     message: error.message,
     name: error.name,
@@ -125,7 +132,7 @@ const logError = (error: AppError, req: Request | AuthenticatedRequest): void =>
     userId: (req as AuthenticatedRequest).user?.id,
     timestamp: new Date().toISOString(),
   };
-  
+
   // Log level based on error type
   if (error.statusCode >= 500) {
     console.error('🚨 Server Error:', logData);
@@ -144,28 +151,28 @@ const handleDatabaseError = (error: DatabaseError): AppError => {
   switch (error.code) {
     case '23505': // unique_violation
       return new ConflictError('Resource already exists with these values');
-    
+
     case '23503': // foreign_key_violation
       return new ValidationError('Referenced resource does not exist');
-    
+
     case '23502': // not_null_violation
       return new ValidationError(`Required field '${error.column}' is missing`);
-    
+
     case '23514': // check_violation
       return new ValidationError('Data validation failed');
-    
+
     case '42P01': // undefined_table
       return new AppError('Database configuration error', 500);
-    
+
     case '42703': // undefined_column
       return new AppError('Database schema error', 500);
-    
+
     case '28P01': // invalid_password
       return new AppError('Database authentication failed', 500);
-    
+
     case '3D000': // invalid_catalog_name
       return new AppError('Database does not exist', 500);
-    
+
     default:
       return new AppError('Database operation failed', 500);
   }
@@ -178,13 +185,13 @@ const handleJWTError = (error: Error): AppError => {
   switch (error.name) {
     case 'JsonWebTokenError':
       return new AuthenticationError('Invalid token');
-    
+
     case 'TokenExpiredError':
       return new AuthenticationError('Token has expired');
-    
+
     case 'NotBeforeError':
       return new AuthenticationError('Token not active');
-    
+
     default:
       return new AuthenticationError('Token validation failed');
   }
@@ -197,12 +204,12 @@ const handleJoiError = (error: JoiValidationError): ValidationError => {
   if (!error.details || error.details.length === 0) {
     return new ValidationError('Validation failed');
   }
-  
+
   const firstDetail = error.details[0];
   if (!firstDetail) {
     return new ValidationError('Validation failed');
   }
-  
+
   const message = firstDetail.message;
   const field = firstDetail.path.join('.');
   return new ValidationError(message, field);
@@ -212,13 +219,13 @@ const handleJoiError = (error: JoiValidationError): ValidationError => {
  * Main error handler middleware
  */
 export const errorHandler = (
-  error: any, 
-  req: Request, 
-  res: Response, 
+  error: any,
+  req: Request,
+  res: Response,
   next: NextFunction
 ): void => {
   let processedError: AppError = error;
-  
+
   // Handle specific error types
   if (error.name === 'ValidationError' && error.details) {
     // Joi validation error
@@ -232,15 +239,17 @@ export const errorHandler = (
   } else if (!(error instanceof AppError)) {
     // Generic error - convert to AppError
     processedError = new AppError(
-      config.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      config.NODE_ENV === 'development'
+        ? error.message
+        : 'Internal server error',
       500,
       false
     );
   }
-  
+
   // Log the error
   logError(processedError, req);
-  
+
   // Send error response
   const errorResponse = formatErrorResponse(processedError, req);
   res.status(processedError.statusCode || 500).json(errorResponse);
@@ -258,6 +267,9 @@ export const asyncHandler = (fn: Function) => {
 /**
  * Create error with status code
  */
-export const createError = (message: string, statusCode: number = 500): AppError => {
+export const createError = (
+  message: string,
+  statusCode: number = 500
+): AppError => {
   return new AppError(message, statusCode);
 };
