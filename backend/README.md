@@ -94,14 +94,17 @@ npm run docker:logs    # Ver logs del backend
 ## 🔗 Endpoints de la API
 
 ### Health Check
+
 - `GET /health` - Estado del servidor
 
 ### Autenticación
+
 - `POST /api/auth/registro` - Registrar usuario
 - `POST /api/auth/login` - Iniciar sesión
 - `GET /api/auth/perfil` - Obtener perfil (protegido)
 
 ### Tareas
+
 - `GET /api/tareas` - Listar tareas con filtros
 - `POST /api/tareas` - Crear tarea
 - `PUT /api/tareas/:id` - Actualizar tarea
@@ -109,18 +112,21 @@ npm run docker:logs    # Ver logs del backend
 - `PATCH /api/tareas/:id/completar` - Marcar completada
 
 ### Categorías
+
 - `GET /api/categorias` - Listar categorías
 - `POST /api/categorias` - Crear categoría
 - `PUT /api/categorias/:id` - Actualizar categoría
 - `DELETE /api/categorias/:id` - Eliminar categoría
 
 ### Etiquetas
+
 - `GET /api/etiquetas` - Listar etiquetas
 - `POST /api/etiquetas` - Crear etiqueta
 
 ## 🗄️ Base de Datos
 
 ### Estructura
+
 - **usuarios** - Cuentas de usuario
 - **categorias** - Categorías de tareas
 - **tareas** - Tareas principales
@@ -128,7 +134,9 @@ npm run docker:logs    # Ver logs del backend
 - **tarea_etiquetas** - Relación muchos-a-muchos
 
 ### Migraciones
+
 Las migraciones se ejecutan automáticamente en orden numérico:
+
 1. `001_create_usuarios.sql`
 2. `002_create_categorias.sql`
 3. `003_create_tareas.sql`
@@ -138,12 +146,15 @@ Las migraciones se ejecutan automáticamente en orden numérico:
 ## 🔧 Configuración
 
 ### Variables de Entorno
+
 Ver `.env.example` para todas las configuraciones disponibles.
 
 ### Docker Compose
+
 Los servicios incluidos:
+
 - **postgres**: PostgreSQL 16
-- **redis**: Redis 7 
+- **redis**: Redis 7
 - **backend**: API Node.js
 - **pgadmin**: Administrador de DB (opcional)
 
@@ -163,6 +174,7 @@ npm run test:coverage
 ## 📝 Logging
 
 Los logs se escriben en:
+
 - `logs/error.log` - Solo errores
 - `logs/combined.log` - Todos los logs
 - Consola - Desarrollo
@@ -199,6 +211,7 @@ backend/
 ## 🚀 Despliegue
 
 ### Producción
+
 1. Configurar variables de entorno de producción
 2. Ejecutar migraciones
 3. Usar `npm start` o PM2
@@ -206,6 +219,7 @@ backend/
 5. Configurar SSL/TLS
 
 ### Docker
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
@@ -213,12 +227,14 @@ docker-compose -f docker-compose.prod.yml up -d
 ## 🐛 Troubleshooting
 
 ### Errores comunes:
+
 - **Puerto en uso**: Cambiar `PORT` en `.env`
 - **DB connection failed**: Verificar servicios Docker
 - **Migration errors**: Verificar permisos de DB
 - **Redis connection**: Verificar configuración Redis
 
 ### Logs útiles:
+
 ```bash
 # Ver logs del backend
 docker-compose logs -f backend

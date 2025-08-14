@@ -174,59 +174,66 @@ const hashPassword = async (password: string): Promise<string> => {
  */
 const insertUsers = async (): Promise<number[]> => {
   console.log('👥 Inserting sample users...');
-  
+
   const userIds: number[] = [];
-  
+
   for (const user of sampleUsers) {
     try {
       const hashedPassword = await hashPassword(user.password);
-      
+
       const result = await pool.query(
         'INSERT INTO usuarios (email, nombre, password_hash) VALUES ($1, $2, $3) RETURNING id',
         [user.email, user.nombre, hashedPassword]
       );
-      
+
       userIds.push(result.rows[0].id);
       console.log(`✅ User created: ${user.email} (ID: ${result.rows[0].id})`);
-      
     } catch (error: any) {
       if (error.code === '23505') {
         console.log(`⏭️ User already exists: ${user.email}`);
-        const existingUser = await pool.query('SELECT id FROM usuarios WHERE email = $1', [user.email]);
+        const existingUser = await pool.query(
+          'SELECT id FROM usuarios WHERE email = $1',
+          [user.email]
+        );
         userIds.push(existingUser.rows[0].id);
       } else {
         throw error;
       }
     }
   }
-  
+
   return userIds;
 };
 
 /**
  * Insert categories for each user
  */
-const insertCategories = async (userIds: number[]): Promise<Map<number, Record<string, number>>> => {
+const insertCategories = async (
+  userIds: number[]
+): Promise<Map<number, Record<string, number>>> => {
   console.log('📁 Inserting sample categories...');
-  
+
   const categoryMap = new Map<number, Record<string, number>>(); // user_id -> { category_name: category_id }
-  
+
   for (const userId of userIds) {
     categoryMap.set(userId, {});
-    
+
     for (const category of sampleCategories) {
       try {
         const result = await pool.query(
           'INSERT INTO categorias (usuario_id, nombre, descripcion, color) VALUES ($1, $2, $3, $4) RETURNING id',
           [userId, category.nombre, category.descripcion, category.color]
         );
-        
+
         categoryMap.get(userId)![category.nombre] = result.rows[0].id;
-        console.log(`✅ Category created: ${category.nombre} for user ${userId}`);
-        
+        console.log(
+          `✅ Category created: ${category.nombre} for user ${userId}`
+        );
       } catch (error: any) {
         if (error.code === '23505') {
-          console.log(`⏭️ Category already exists: ${category.nombre} for user ${userId}`);
+          console.log(
+            `⏭️ Category already exists: ${category.nombre} for user ${userId}`
+          );
           const existing = await pool.query(
             'SELECT id FROM categorias WHERE usuario_id = $1 AND nombre = $2',
             [userId, category.nombre]
@@ -238,34 +245,37 @@ const insertCategories = async (userIds: number[]): Promise<Map<number, Record<s
       }
     }
   }
-  
+
   return categoryMap;
 };
 
 /**
  * Insert tags for each user
  */
-const insertTags = async (userIds: number[]): Promise<Map<number, Record<string, number>>> => {
+const insertTags = async (
+  userIds: number[]
+): Promise<Map<number, Record<string, number>>> => {
   console.log('🏷️ Inserting sample tags...');
-  
+
   const tagMap = new Map<number, Record<string, number>>(); // user_id -> { tag_name: tag_id }
-  
+
   for (const userId of userIds) {
     tagMap.set(userId, {});
-    
+
     for (const tag of sampleTags) {
       try {
         const result = await pool.query(
           'INSERT INTO etiquetas (usuario_id, nombre, color) VALUES ($1, $2, $3) RETURNING id',
           [userId, tag.nombre, tag.color]
         );
-        
+
         tagMap.get(userId)![tag.nombre] = result.rows[0].id;
         console.log(`✅ Tag created: ${tag.nombre} for user ${userId}`);
-        
       } catch (error: any) {
         if (error.code === '23505') {
-          console.log(`⏭️ Tag already exists: ${tag.nombre} for user ${userId}`);
+          console.log(
+            `⏭️ Tag already exists: ${tag.nombre} for user ${userId}`
+          );
           const existing = await pool.query(
             'SELECT id FROM etiquetas WHERE usuario_id = $1 AND nombre = $2',
             [userId, tag.nombre]
@@ -277,7 +287,7 @@ const insertTags = async (userIds: number[]): Promise<Map<number, Record<string,
       }
     }
   }
-  
+
   return tagMap;
 };
 
@@ -290,23 +300,30 @@ const insertTasks = async (
   tagMap: Map<number, Record<string, number>>
 ): Promise<void> => {
   console.log('✅ Inserting sample tasks...');
-  
+
   for (const userId of userIds) {
     for (const task of sampleTasks) {
       try {
         // Get category ID
         const categoryId = categoryMap.get(userId)?.[task.categoria] || null;
-        
+
         // Insert task
         const result = await pool.query(
           `INSERT INTO tareas (usuario_id, categoria_id, titulo, descripcion, prioridad, fecha_vencimiento) 
            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-          [userId, categoryId, task.titulo, task.descripcion, task.prioridad, task.fecha_vencimiento]
+          [
+            userId,
+            categoryId,
+            task.titulo,
+            task.descripcion,
+            task.prioridad,
+            task.fecha_vencimiento,
+          ]
         );
-        
+
         const taskId = result.rows[0].id;
         console.log(`✅ Task created: ${task.titulo} for user ${userId}`);
-        
+
         // Insert task tags
         for (const tagName of task.etiquetas) {
           const tagId = tagMap.get(userId)?.[tagName];
@@ -318,7 +335,6 @@ const insertTasks = async (
             console.log(`🔗 Tag linked: ${tagName} to task ${taskId}`);
           }
         }
-        
       } catch (error) {
         console.error(`❌ Error creating task ${task.titulo}:`, error);
       }
@@ -332,21 +348,21 @@ const insertTasks = async (
 export const seedDatabase = async (): Promise<void> => {
   try {
     console.log('🌱 Starting database seeding...');
-    
+
     // Insert users
     const userIds = await insertUsers();
-    
+
     // Insert categories
     const categoryMap = await insertCategories(userIds);
-    
+
     // Insert tags
     const tagMap = await insertTags(userIds);
-    
+
     // Insert tasks
     await insertTasks(userIds, categoryMap, tagMap);
-    
+
     console.log('🎉 Database seeding completed successfully!');
-    
+
     // Show summary
     const summary = await pool.query(`
       SELECT 
@@ -356,9 +372,8 @@ export const seedDatabase = async (): Promise<void> => {
         (SELECT COUNT(*) FROM tareas) as tasks,
         (SELECT COUNT(*) FROM tarea_etiquetas) as task_tags
     `);
-    
+
     console.log('📊 Database Summary:', summary.rows[0]);
-    
   } catch (error) {
     console.error('❌ Database seeding failed:', error);
     process.exit(1);
@@ -373,15 +388,14 @@ export const seedDatabase = async (): Promise<void> => {
 export const clearDatabase = async (): Promise<void> => {
   try {
     console.log('🧹 Clearing database data...');
-    
+
     await pool.query('DELETE FROM tarea_etiquetas');
     await pool.query('DELETE FROM tareas');
     await pool.query('DELETE FROM etiquetas');
     await pool.query('DELETE FROM categorias');
     await pool.query('DELETE FROM usuarios');
-    
+
     console.log('✅ Database cleared');
-    
   } catch (error) {
     console.error('❌ Error clearing database:', error);
     throw error;
@@ -393,21 +407,21 @@ export const clearDatabase = async (): Promise<void> => {
  */
 const main = async (): Promise<void> => {
   const command = process.argv[2];
-  
+
   switch (command) {
     case 'seed':
       await seedDatabase();
       break;
-    
+
     case 'clear':
       await clearDatabase();
       break;
-    
+
     case 'reset':
       await clearDatabase();
       await seedDatabase();
       break;
-    
+
     default:
       console.log(`
 🌱 Database Seeding Tool

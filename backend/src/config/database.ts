@@ -15,8 +15,13 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || 'todolist_password',
   max: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
-  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '2000'),
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: parseInt(
+    process.env.DB_CONNECTION_TIMEOUT || '2000'
+  ),
+  ssl:
+    process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
 };
 
 /**
@@ -93,7 +98,9 @@ const initializeRedis = async (): Promise<void> => {
 const testDatabaseConnection = async (): Promise<boolean> => {
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT NOW() as current_time, version() as version');
+    const result = await client.query(
+      'SELECT NOW() as current_time, version() as version'
+    );
     console.log('✅ Conexión PostgreSQL exitosa:', {
       time: result.rows[0].current_time,
       version: result.rows[0].version.split(' ')[0],
@@ -125,20 +132,20 @@ const testRedisConnection = async (): Promise<boolean> => {
  */
 const initializeDatabases = async (): Promise<void> => {
   console.log('🚀 Inicializando conexiones de base de datos...');
-  
+
   // Test PostgreSQL connection
   const pgConnected = await testDatabaseConnection();
   if (!pgConnected) {
     throw new Error('No se pudo conectar a PostgreSQL');
   }
-  
+
   // Initialize and test Redis connection
   await initializeRedis();
   const redisConnected = await testRedisConnection();
   if (!redisConnected) {
     throw new Error('No se pudo conectar a Redis');
   }
-  
+
   console.log('🎉 Todas las conexiones de base de datos inicializadas');
 };
 
@@ -147,14 +154,14 @@ const initializeDatabases = async (): Promise<void> => {
  */
 const closeDatabases = async (): Promise<void> => {
   console.log('🔌 Cerrando conexiones de base de datos...');
-  
+
   try {
     await pool.end();
     console.log('✅ PostgreSQL pool cerrado');
   } catch (error) {
     console.error('❌ Error cerrando PostgreSQL:', error);
   }
-  
+
   try {
     await redisClient.quit();
     console.log('✅ Redis client cerrado');
@@ -166,21 +173,24 @@ const closeDatabases = async (): Promise<void> => {
 /**
  * Execute SQL query with error handling
  */
-const query = async (text: string, params: any[] = []): Promise<QueryResult> => {
+const query = async (
+  text: string,
+  params: any[] = []
+): Promise<QueryResult> => {
   const start = Date.now();
   try {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('🔍 Query ejecutado:', { 
-      text: text.substring(0, 50) + '...', 
-      duration, 
-      rows: result.rowCount 
+    console.log('🔍 Query ejecutado:', {
+      text: text.substring(0, 50) + '...',
+      duration,
+      rows: result.rowCount,
     });
     return result;
   } catch (error) {
-    console.error('❌ Error en query:', { 
-      text: text.substring(0, 50) + '...', 
-      error: error instanceof Error ? error.message : error 
+    console.error('❌ Error en query:', {
+      text: text.substring(0, 50) + '...',
+      error: error instanceof Error ? error.message : error,
     });
     throw error;
   }
@@ -189,7 +199,9 @@ const query = async (text: string, params: any[] = []): Promise<QueryResult> => 
 /**
  * Execute transaction with automatic rollback on error
  */
-const transaction = async <T>(callback: (client: PoolClient) => Promise<T>): Promise<T> => {
+const transaction = async <T>(
+  callback: (client: PoolClient) => Promise<T>
+): Promise<T> => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

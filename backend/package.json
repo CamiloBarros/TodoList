@@ -108,7 +108,13 @@
       "/coverage/",
       "/dist/"
     ],
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
     "transform": {
       "^.+\\.ts$": "ts-jest"
     }
@@ -125,7 +131,9 @@
       "prettier"
     ],
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "parserOptions": {
       "ecmaVersion": 2022,
       "sourceType": "module",

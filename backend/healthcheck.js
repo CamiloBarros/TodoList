@@ -15,7 +15,7 @@ const options = {
 
 const healthCheck = http.request(options, (res) => {
   console.log(`Health check status: ${res.statusCode}`);
-  
+
   if (res.statusCode === 200) {
     process.exit(0);
   } else {
