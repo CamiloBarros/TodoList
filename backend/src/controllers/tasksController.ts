@@ -3,48 +3,48 @@ import { AuthenticatedRequest, TaskFilters } from '../types';
 import * as tasksService from '../services/tasksService';
 
 /**
- * Controller de Tareas
- * Maneja todas las rutas relacionadas con la gestión de tareas
+ * Tasks Controller
+ * Handles all routes related to task management
  */
 
 /**
- * GET /api/tareas
- * Obtiene todas las tareas del User con filtros y paginación
+ * GET /api/tasks
+ * Get all user tasks with filters and pagination
  */
-export const obtenerTareas = async (
+export const getTasks = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const filtros: TaskFilters = {
-      completada: req.query.completada
-        ? req.query.completada === 'true'
+    const filters: TaskFilters = {
+      completed: req.query.completed
+        ? req.query.completed === 'true'
         : undefined,
-      Category: req.query.Category
-        ? parseInt(req.query.Category as string)
+      category: req.query.category
+        ? parseInt(req.query.category as string)
         : undefined,
-      prioridad: req.query.prioridad as any,
-      fecha_vencimiento: req.query.fecha_vencimiento as string,
-      busqueda: req.query.busqueda as string,
-      etiquetas: req.query.etiquetas as string,
-      ordenar: req.query.ordenar as any,
-      direccion: req.query.direccion as any,
+      priority: req.query.priority as any,
+      due_date: req.query.due_date as string,
+      search: req.query.search as string,
+      tags: req.query.tags as string,
+      sort_by: req.query.sort_by as any,
+      sort_direction: req.query.sort_direction as any,
       page: req.query.page ? parseInt(req.query.page as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
     };
 
-    const resultado = await tasksService.obtenerTareas(req.user.id, filtros);
+    const result = await tasksService.getTasks(req.user.id, filters);
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
+        data: result.data,
       });
     } else {
       res.status(500).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'INTERNAL_SERVER_ERROR',
           statusCode: 500,
           timestamp: new Date().toISOString(),
@@ -52,11 +52,11 @@ export const obtenerTareas = async (
       });
     }
   } catch (error) {
-    console.error('Error en obtener tareas controller:', error);
+    console.error('Error in get tasks controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -66,21 +66,21 @@ export const obtenerTareas = async (
 };
 
 /**
- * GET /api/tareas/:id
- * Obtiene una Task específica por ID
+ * GET /api/tasks/:id
+ * Get a specific task by ID
  */
-export const obtenerTareaPorId = async (
+export const getTaskById = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const taskId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(taskId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de Task inválido',
+          message: 'Invalid task ID',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -89,22 +89,19 @@ export const obtenerTareaPorId = async (
       return;
     }
 
-    const resultado = await tasksService.obtenerTareaPorId(
-      tareaId,
-      req.user.id
-    );
+    const result = await tasksService.getTaskById(taskId, req.user.id);
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
+        data: result.data,
       });
     } else {
-      const statusCode = resultado.error === 'Task no encontrada' ? 404 : 500;
+      const statusCode = result.error === 'Task not found' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -112,11 +109,11 @@ export const obtenerTareaPorId = async (
       });
     }
   } catch (error) {
-    console.error('Error en obtener Task por ID controller:', error);
+    console.error('Error in get task by ID controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -126,49 +123,43 @@ export const obtenerTareaPorId = async (
 };
 
 /**
- * POST /api/tareas
- * Crea una nueva Task
+ * POST /api/tasks
+ * Create a new task
  */
-export const crearTarea = async (
+export const createTask = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const {
-      titulo,
-      descripcion,
-      categoria_id,
-      prioridad,
-      fecha_vencimiento,
-      etiquetas,
-    } = req.body;
+    const { title, description, category_id, priority, due_date, tags } =
+      req.body;
 
-    const resultado = await tasksService.crearTarea(req.user.id, {
-      titulo,
-      descripcion,
-      categoria_id,
-      prioridad,
-      fecha_vencimiento,
-      etiquetas,
+    const result = await tasksService.createTask(req.user.id, {
+      title,
+      description,
+      category_id,
+      priority,
+      due_date,
+      tags,
     });
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(201).json({
         success: true,
-        data: resultado.data,
-        message: resultado.message,
+        data: result.data,
+        message: result.message,
       });
     } else {
       const statusCode =
-        resultado.error?.includes('no encontrada') ||
-        resultado.error?.includes('no pertenece')
+        result.error?.includes('not found') ||
+        result.error?.includes('no pertenece')
           ? 400
           : 500;
 
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type:
             statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
           statusCode,
@@ -177,11 +168,11 @@ export const crearTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en crear Task controller:', error);
+    console.error('Error in create task controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -191,21 +182,21 @@ export const crearTarea = async (
 };
 
 /**
- * PUT /api/tareas/:id
- * Actualiza una Task existente
+ * PUT /api/tasks/:id
+ * Updates an existing task
  */
-export const actualizarTarea = async (
+export const updateTask = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const taskId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(taskId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de Task inválido',
+          message: 'Invalid task ID',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -215,45 +206,45 @@ export const actualizarTarea = async (
     }
 
     const {
-      titulo,
-      descripcion,
-      categoria_id,
-      prioridad,
-      fecha_vencimiento,
-      completada,
-      etiquetas,
+      title,
+      description,
+      category_id,
+      priority,
+      due_date,
+      completed,
+      tags,
     } = req.body;
 
-    const resultado = await tasksService.actualizarTarea(tareaId, req.user.id, {
-      titulo,
-      descripcion,
-      categoria_id,
-      prioridad,
-      fecha_vencimiento,
-      completada,
-      etiquetas,
+    const result = await tasksService.updateTask(taskId, req.user.id, {
+      title,
+      description,
+      category_id,
+      priority,
+      due_date,
+      completed,
+      tags,
     });
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
-        message: resultado.message,
+        data: result.data,
+        message: result.message,
       });
     } else {
       const statusCode =
-        resultado.error === 'Task no encontrada'
+        result.error === 'Task not found'
           ? 404
-          : resultado.error?.includes('no encontrada') ||
-              resultado.error?.includes('no pertenece') ||
-              resultado.error?.includes('No hay datos')
+          : result.error?.includes('not found') ||
+              result.error?.includes('no pertenece') ||
+              result.error?.includes('No hay datos')
             ? 400
             : 500;
 
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type:
             statusCode === 404
               ? 'NOT_FOUND'
@@ -266,11 +257,11 @@ export const actualizarTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en actualizar Task controller:', error);
+    console.error('Error in update task controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -280,21 +271,21 @@ export const actualizarTarea = async (
 };
 
 /**
- * DELETE /api/tareas/:id
- * Elimina una Task
+ * DELETE /api/tasks/:id
+ * Deletes a task
  */
-export const eliminarTarea = async (
+export const deleteTask = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const taskId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(taskId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de Task inválido',
+          message: 'Invalid task ID',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -303,19 +294,19 @@ export const eliminarTarea = async (
       return;
     }
 
-    const resultado = await tasksService.eliminarTarea(tareaId, req.user.id);
+    const result = await tasksService.deleteTask(taskId, req.user.id);
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        message: resultado.message,
+        message: result.message,
       });
     } else {
-      const statusCode = resultado.error === 'Task no encontrada' ? 404 : 500;
+      const statusCode = result.error === 'Task not found' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -323,11 +314,11 @@ export const eliminarTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en eliminar Task controller:', error);
+    console.error('Error in delete task controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -337,21 +328,21 @@ export const eliminarTarea = async (
 };
 
 /**
- * PATCH /api/tareas/:id/completar
- * Marca una Task como completada o pendiente
+ * PATCH /api/tasks/:id/complete
+ * Mark a task as completed or pending
  */
-export const toggleCompletarTarea = async (
+export const toggleCompleteTask = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const tareaId = parseInt(req.params.id || '0');
+    const taskId = parseInt(req.params.id || '0');
 
-    if (isNaN(tareaId)) {
+    if (isNaN(taskId)) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de Task inválido',
+          message: 'Invalid task ID',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -360,13 +351,13 @@ export const toggleCompletarTarea = async (
       return;
     }
 
-    const { completada } = req.body;
+    const { completed } = req.body;
 
-    if (typeof completada !== 'boolean') {
+    if (typeof completed !== 'boolean') {
       res.status(400).json({
         success: false,
         error: {
-          message: 'El campo completada debe ser true o false',
+          message: 'The completed field must be true or false',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -375,22 +366,22 @@ export const toggleCompletarTarea = async (
       return;
     }
 
-    const resultado = await tasksService.actualizarTarea(tareaId, req.user.id, {
-      completada,
+    const result = await tasksService.updateTask(taskId, req.user.id, {
+      completed,
     });
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
-        message: `Task marcada como ${completada ? 'completada' : 'pendiente'}`,
+        data: result.data,
+        message: `Task marked as ${completed ? 'completed' : 'pending'}`,
       });
     } else {
-      const statusCode = resultado.error === 'Task no encontrada' ? 404 : 500;
+      const statusCode = result.error === 'Task not found' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: statusCode === 404 ? 'NOT_FOUND' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -398,11 +389,11 @@ export const toggleCompletarTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en toggle completar Task controller:', error);
+    console.error('Error in toggle complete task controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -412,26 +403,26 @@ export const toggleCompletarTarea = async (
 };
 
 /**
- * GET /api/tareas/estadisticas
- * Obtiene estadísticas de las tareas del User
+ * GET /api/tasks/statistics
+ * Get user task statistics
  */
-export const obtenerEstadisticasTareas = async (
+export const getTaskStatistics = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const resultado = await tasksService.obtenerEstadisticasTareas(req.user.id);
+    const result = await tasksService.getTaskStatistics(req.user.id);
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
+        data: result.data,
       });
     } else {
       res.status(500).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'INTERNAL_SERVER_ERROR',
           statusCode: 500,
           timestamp: new Date().toISOString(),
@@ -439,11 +430,11 @@ export const obtenerEstadisticasTareas = async (
       });
     }
   } catch (error) {
-    console.error('Error en obtener estadísticas de tareas controller:', error);
+    console.error('Error in get task statistics controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),

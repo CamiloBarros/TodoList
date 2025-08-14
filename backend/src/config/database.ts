@@ -52,11 +52,11 @@ const redisClient = createClient(redisConfig) as RedisClientType;
  * Handle PostgreSQL connection events
  */
 pool.on('connect', (client: PoolClient) => {
-  console.log('📦 New PostgreSQL connection established');
+  console.log('📦 Nueva conexión PostgreSQL establecida');
 });
 
 pool.on('error', (err: Error, client: PoolClient) => {
-  console.error('❌ Unexpected error on PostgreSQL client:', err);
+  console.error('❌ Error inesperado en cliente PostgreSQL:', err);
   process.exit(-1);
 });
 
@@ -64,19 +64,19 @@ pool.on('error', (err: Error, client: PoolClient) => {
  * Handle Redis connection events
  */
 redisClient.on('connect', () => {
-  console.log('🔗 Connecting to Redis...');
+  console.log('🔗 Conectando a Redis...');
 });
 
 redisClient.on('ready', () => {
-  console.log('✅ Redis client ready');
+  console.log('✅ Cliente Redis listo');
 });
 
 redisClient.on('error', (err: Error) => {
-  console.error('❌ Redis connection error:', err);
+  console.error('❌ Error de conexión Redis:', err);
 });
 
 redisClient.on('end', () => {
-  console.log('🔚 Redis connection closed');
+  console.log('🔚 Conexión Redis cerrada');
 });
 
 /**
@@ -85,9 +85,9 @@ redisClient.on('end', () => {
 const initializeRedis = async (): Promise<void> => {
   try {
     await redisClient.connect();
-    console.log('🎯 Redis connected successfully');
+    console.log('🎯 Redis conectado exitosamente');
   } catch (error) {
-    console.error('❌ Error connecting to Redis:', error);
+    console.error('❌ Error al conectar Redis:', error);
     process.exit(1);
   }
 };
@@ -101,14 +101,14 @@ const testDatabaseConnection = async (): Promise<boolean> => {
     const result = await client.query(
       'SELECT NOW() as current_time, version() as version'
     );
-    console.log('✅ PostgreSQL connection successful:', {
+    console.log('✅ Conexión PostgreSQL exitosa:', {
       time: result.rows[0].current_time,
       version: result.rows[0].version.split(' ')[0],
     });
     client.release();
     return true;
   } catch (error) {
-    console.error('❌ PostgreSQL connection error:', error);
+    console.error('❌ Error de conexión PostgreSQL:', error);
     return false;
   }
 };
@@ -119,10 +119,10 @@ const testDatabaseConnection = async (): Promise<boolean> => {
 const testRedisConnection = async (): Promise<boolean> => {
   try {
     await redisClient.ping();
-    console.log('✅ Redis connection successful');
+    console.log('✅ Conexión Redis exitosa');
     return true;
   } catch (error) {
-    console.error('❌ Redis connection error:', error);
+    console.error('❌ Error de conexión Redis:', error);
     return false;
   }
 };
@@ -131,42 +131,42 @@ const testRedisConnection = async (): Promise<boolean> => {
  * Initialize all database connections
  */
 const initializeDatabases = async (): Promise<void> => {
-  console.log('🚀 Initializing database connections...');
+  console.log('🚀 Inicializando conexiones de base de datos...');
 
   // Test PostgreSQL connection
   const pgConnected = await testDatabaseConnection();
   if (!pgConnected) {
-    throw new Error('Could not connect to PostgreSQL');
+    throw new Error('No se pudo conectar a PostgreSQL');
   }
 
   // Initialize and test Redis connection
   await initializeRedis();
   const redisConnected = await testRedisConnection();
   if (!redisConnected) {
-    throw new Error('Could not connect to Redis');
+    throw new Error('No se pudo conectar a Redis');
   }
 
-  console.log('🎉 All database connections initialized');
+  console.log('🎉 Todas las conexiones de base de datos inicializadas');
 };
 
 /**
  * Close all database connections gracefully
  */
 const closeDatabases = async (): Promise<void> => {
-  console.log('🔌 Closing database connections...');
+  console.log('🔌 Cerrando conexiones de base de datos...');
 
   try {
     await pool.end();
-    console.log('✅ PostgreSQL pool closed');
+    console.log('✅ PostgreSQL pool cerrado');
   } catch (error) {
-    console.error('❌ Error closing PostgreSQL:', error);
+    console.error('❌ Error cerrando PostgreSQL:', error);
   }
 
   try {
     await redisClient.quit();
-    console.log('✅ Redis client closed');
+    console.log('✅ Redis client cerrado');
   } catch (error) {
-    console.error('❌ Error closing Redis:', error);
+    console.error('❌ Error cerrando Redis:', error);
   }
 };
 
@@ -181,14 +181,14 @@ const query = async (
   try {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('🔍 Query executed:', {
+    console.log('🔍 Query ejecutado:', {
       text: text.substring(0, 50) + '...',
       duration,
       rows: result.rowCount,
     });
     return result;
   } catch (error) {
-    console.error('❌ Query error:', {
+    console.error('❌ Error en query:', {
       text: text.substring(0, 50) + '...',
       error: error instanceof Error ? error.message : error,
     });

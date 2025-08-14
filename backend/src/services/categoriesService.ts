@@ -1,388 +1,401 @@
 ﻿import { query, transaction } from '../config/database';
-import { 
-  Category, 
-  CategoryCreation,
-  ApiResponse 
-} from '../types';
+import { Category, CategoryCreation, ApiResponse } from '../types';
 
 /**
- * Servicio de Categorías
- * Maneja todas las operaciones CRUD para las categorías de User
+ * Categories Service
+ * Handles all CRUD operations for user categories
  */
 
 /**
- * Obtiene todas las categorías del User
+ * Gets all user categories
  */
-export const obtenerCategorias = async (
-  usuarioId: number
+export const getCategories = async (
+  userId: number
 ): Promise<ApiResponse<Category[]>> => {
   try {
-    const resultado = await query(
-      `SELECT id, usuario_id, nombre, descripcion, color, creado_en, actualizado_en 
-       FROM categorias 
-       WHERE usuario_id = $1 
-       ORDER BY nombre ASC`,
-      [usuarioId]
+    const result = await query(
+      `SELECT id, user_id, name, description, color, created_at, updated_at 
+       FROM categories 
+       WHERE user_id = $1 
+       ORDER BY name ASC`,
+      [userId]
     );
 
-    const categorias: Category[] = resultado.rows.map(row => ({
+    const categories: Category[] = result.rows.map((row) => ({
       id: row.id,
-      usuario_id: row.usuario_id,
-      nombre: row.nombre,
-      descripcion: row.descripcion,
+      user_id: row.user_id,
+      name: row.name,
+      description: row.description,
       color: row.color,
-      creado_en: row.creado_en,
-      actualizado_en: row.actualizado_en,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
     }));
 
     return {
       success: true,
-      data: categorias,
+      data: categories,
     };
   } catch (error) {
-    console.error('Error obteniendo categorías:', error);
+    console.error('Error getting categories:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Obtiene una categoría específica por ID
+ * Gets a specific category by ID
  */
-export const obtenerCategoriaPorId = async (
-  categoriaId: number,
-  usuarioId: number
+export const getCategoryById = async (
+  categoryId: number,
+  userId: number
 ): Promise<ApiResponse<Category>> => {
   try {
-    const resultado = await query(
-      `SELECT id, usuario_id, nombre, descripcion, color, creado_en, actualizado_en 
-       FROM categorias 
-       WHERE id = $1 AND usuario_id = $2`,
-      [categoriaId, usuarioId]
+    const result = await query(
+      `SELECT id, user_id, name, description, color, created_at, updated_at 
+       FROM categories 
+       WHERE id = $1 AND user_id = $2`,
+      [categoryId, userId]
     );
 
-    if (resultado.rows.length === 0) {
+    if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Categoría no encontrada',
+        error: 'Category not found',
       };
     }
 
-    const Category: Category = resultado.rows[0];
+    const category: Category = result.rows[0];
 
     return {
       success: true,
-      data: Category,
+      data: category,
     };
   } catch (error) {
-    console.error('Error obteniendo categoría por ID:', error);
+    console.error('Error getting category by ID:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Crea una nueva categoría
+ * Creates a new category
  */
-export const crearCategoria = async (
-  usuarioId: number,
-  datosCategoria: CategoryCreation
+export const createCategory = async (
+  userId: number,
+  categoryData: CategoryCreation
 ): Promise<ApiResponse<Category>> => {
   try {
-    // Verificar si ya existe una categoría con el mismo nombre para este User
-    const categoriaExiste = await query(
-      'SELECT id FROM categorias WHERE nombre = $1 AND usuario_id = $2',
-      [datosCategoria.nombre, usuarioId]
+    // Check if a category with the same name already exists for this user
+    const categoryExists = await query(
+      'SELECT id FROM categories WHERE name = $1 AND user_id = $2',
+      [categoryData.name, userId]
     );
 
-    if (categoriaExiste.rows.length > 0) {
+    if (categoryExists.rows.length > 0) {
       return {
         success: false,
-        error: 'Ya existe una categoría con ese nombre',
+        error: 'A category with that name already exists',
       };
     }
 
-    // Generar color aleatorio si no se proporciona
-    const color = datosCategoria.color || generateRandomColor();
+    // Generate random color if not provided
+    const color = categoryData.color || generateRandomColor();
 
-    const resultado = await query(
-      `INSERT INTO categorias (usuario_id, nombre, descripcion, color) 
+    const result = await query(
+      `INSERT INTO categories (user_id, name, description, color) 
        VALUES ($1, $2, $3, $4) 
-       RETURNING id, usuario_id, nombre, descripcion, color, creado_en, actualizado_en`,
-      [
-        usuarioId,
-        datosCategoria.nombre,
-        datosCategoria.descripcion || null,
-        color
-      ]
+       RETURNING id, user_id, name, description, color, created_at, updated_at`,
+      [userId, categoryData.name, categoryData.description || null, color]
     );
 
-    const nuevaCategoria: Category = resultado.rows[0];
+    const newCategory: Category = result.rows[0];
 
     return {
       success: true,
-      data: nuevaCategoria,
-      message: 'Categoría creada exitosamente',
+      data: newCategory,
+      message: 'Category created successfully',
     };
   } catch (error) {
-    console.error('Error creando categoría:', error);
+    console.error('Error creating category:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Actualiza una categoría existente
+ * Updates an existing category
  */
-export const actualizarCategoria = async (
-  categoriaId: number,
-  usuarioId: number,
-  datosActualizacion: Partial<CategoryCreation>
+export const updateCategory = async (
+  categoryId: number,
+  userId: number,
+  updateData: Partial<CategoryCreation>
 ): Promise<ApiResponse<Category>> => {
   try {
-    // Verificar que la categoría existe y pertenece al User
-    const categoriaExiste = await query(
-      'SELECT id FROM categorias WHERE id = $1 AND usuario_id = $2',
-      [categoriaId, usuarioId]
+    // Check that the category exists and belongs to the user
+    const categoryExists = await query(
+      'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+      [categoryId, userId]
     );
 
-    if (categoriaExiste.rows.length === 0) {
+    if (categoryExists.rows.length === 0) {
       return {
         success: false,
-        error: 'Categoría no encontrada',
+        error: 'Category not found',
       };
     }
 
-    // Verificar si el nuevo nombre ya existe (si se está cambiando)
-    if (datosActualizacion.nombre) {
-      const nombreExiste = await query(
-        'SELECT id FROM categorias WHERE nombre = $1 AND usuario_id = $2 AND id != $3',
-        [datosActualizacion.nombre, usuarioId, categoriaId]
+    // Check if the new name already exists (if changing)
+    if (updateData.name) {
+      const nameExists = await query(
+        'SELECT id FROM categories WHERE name = $1 AND user_id = $2 AND id != $3',
+        [updateData.name, userId, categoryId]
       );
 
-      if (nombreExiste.rows.length > 0) {
+      if (nameExists.rows.length > 0) {
         return {
           success: false,
-          error: 'Ya existe una categoría con ese nombre',
+          error: 'A category with that name already exists',
         };
       }
     }
 
-    // Construir query de actualización dinámicamente
-    const camposActualizar: string[] = [];
-    const valores: any[] = [];
-    let contador = 1;
+    // Build update query dynamically
+    const fieldsToUpdate: string[] = [];
+    const values: any[] = [];
+    let counter = 1;
 
-    if (datosActualizacion.nombre !== undefined) {
-      camposActualizar.push(`nombre = $${contador}`);
-      valores.push(datosActualizacion.nombre);
-      contador++;
+    if (updateData.name !== undefined) {
+      fieldsToUpdate.push(`name = $${counter}`);
+      values.push(updateData.name);
+      counter++;
     }
 
-    if (datosActualizacion.descripcion !== undefined) {
-      camposActualizar.push(`descripcion = $${contador}`);
-      valores.push(datosActualizacion.descripcion);
-      contador++;
+    if (updateData.description !== undefined) {
+      fieldsToUpdate.push(`description = $${counter}`);
+      values.push(updateData.description);
+      counter++;
     }
 
-    if (datosActualizacion.color !== undefined) {
-      camposActualizar.push(`color = $${contador}`);
-      valores.push(datosActualizacion.color);
-      contador++;
+    if (updateData.color !== undefined) {
+      fieldsToUpdate.push(`color = $${counter}`);
+      values.push(updateData.color);
+      counter++;
     }
 
-    if (camposActualizar.length === 0) {
+    if (fieldsToUpdate.length === 0) {
       return {
         success: false,
-        error: 'No hay datos para actualizar',
+        error: 'No data to update',
       };
     }
 
-    // Agregar actualizado_en y IDs
-    camposActualizar.push(`actualizado_en = CURRENT_TIMESTAMP`);
-    valores.push(categoriaId, usuarioId);
+    // Add updated_at and IDs
+    fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(categoryId, userId);
 
     const queryText = `
-      UPDATE categorias 
-      SET ${camposActualizar.join(', ')} 
-      WHERE id = $${valores.length - 1} AND usuario_id = $${valores.length}
-      RETURNING id, usuario_id, nombre, descripcion, color, creado_en, actualizado_en
+      UPDATE categories 
+      SET ${fieldsToUpdate.join(', ')} 
+      WHERE id = $${values.length - 1} AND user_id = $${values.length}
+      RETURNING id, user_id, name, description, color, created_at, updated_at
     `;
 
-    const resultado = await query(queryText, valores);
+    const result = await query(queryText, values);
 
-    const categoriaActualizada: Category = resultado.rows[0];
+    const updatedCategory: Category = result.rows[0];
 
     return {
       success: true,
-      data: categoriaActualizada,
-      message: 'Categoría actualizada exitosamente',
+      data: updatedCategory,
+      message: 'Category updated successfully',
     };
   } catch (error) {
-    console.error('Error actualizando categoría:', error);
+    console.error('Error updating category:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Elimina una categoría
+ * Deletes a category
  */
-export const eliminarCategoria = async (
-  categoriaId: number,
-  usuarioId: number
+export const deleteCategory = async (
+  categoryId: number,
+  userId: number
 ): Promise<ApiResponse<void>> => {
   try {
-    // Verificar si hay tareas asociadas a esta categoría
-    const tareasAsociadas = await query(
-      'SELECT COUNT(*) as count FROM tareas WHERE categoria_id = $1 AND usuario_id = $2',
-      [categoriaId, usuarioId]
+    // Check if there are tasks associated with this category
+    const associatedTasks = await query(
+      'SELECT COUNT(*) as count FROM tasks WHERE category_id = $1 AND user_id = $2',
+      [categoryId, userId]
     );
 
-    const cantidadTareas = parseInt(tareasAsociadas.rows[0].count);
+    const taskCount = parseInt(associatedTasks.rows[0].count);
 
-    if (cantidadTareas > 0) {
+    if (taskCount > 0) {
       return {
         success: false,
-        error: `No se puede eliminar la categoría porque tiene ${cantidadTareas} Task(s) asociada(s)`,
+        error: `Cannot delete category because it has ${taskCount} associated task(s)`,
       };
     }
 
-    const resultado = await query(
-      'DELETE FROM categorias WHERE id = $1 AND usuario_id = $2',
-      [categoriaId, usuarioId]
+    const result = await query(
+      'DELETE FROM categories WHERE id = $1 AND user_id = $2',
+      [categoryId, userId]
     );
 
-    if (resultado.rowCount === 0) {
+    if (result.rowCount === 0) {
       return {
         success: false,
-        error: 'Categoría no encontrada',
+        error: 'Category not found',
       };
     }
 
     return {
       success: true,
-      message: 'Categoría eliminada exitosamente',
+      message: 'Category deleted successfully',
     };
   } catch (error) {
-    console.error('Error eliminando categoría:', error);
+    console.error('Error deleting category:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Elimina una categoría y mueve las tareas asociadas a "sin categoría"
+ * Deletes a category and moves associated tasks to "no category"
  */
-export const eliminarCategoriaConTareas = async (
-  categoriaId: number,
-  usuarioId: number
+export const deleteCategoryWithTasks = async (
+  categoryId: number,
+  userId: number
 ): Promise<ApiResponse<void>> => {
   try {
-    const resultado = await transaction(async (client) => {
-      // Verificar que la categoría existe
-      const categoriaExiste = await client.query(
-        'SELECT id FROM categorias WHERE id = $1 AND usuario_id = $2',
-        [categoriaId, usuarioId]
+    const result = await transaction(async (client) => {
+      // Check that the category exists
+      const categoryExists = await client.query(
+        'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+        [categoryId, userId]
       );
 
-      if (categoriaExiste.rows.length === 0) {
-        throw new Error('Categoría no encontrada');
+      if (categoryExists.rows.length === 0) {
+        throw new Error('Category not found');
       }
 
-      // Mover todas las tareas de esta categoría a "sin categoría" (categoria_id = null)
+      // Move all tasks from this category to "no category" (category_id = null)
       await client.query(
-        'UPDATE tareas SET categoria_id = NULL, actualizado_en = CURRENT_TIMESTAMP WHERE categoria_id = $1 AND usuario_id = $2',
-        [categoriaId, usuarioId]
+        'UPDATE tasks SET category_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE category_id = $1 AND user_id = $2',
+        [categoryId, userId]
       );
 
-      // Eliminar la categoría
+      // Delete the category
       const deleteResult = await client.query(
-        'DELETE FROM categorias WHERE id = $1 AND usuario_id = $2',
-        [categoriaId, usuarioId]
+        'DELETE FROM categories WHERE id = $1 AND user_id = $2',
+        [categoryId, userId]
       );
 
       return deleteResult.rowCount;
     });
 
-    if (resultado === 0) {
+    if (result === 0) {
       return {
         success: false,
-        error: 'Categoría no encontrada',
+        error: 'Category not found',
       };
     }
 
     return {
       success: true,
-      message: 'Categoría eliminada y tareas asociadas movidas a "sin categoría"',
+      message: 'Category deleted and associated tasks moved to "no category"',
     };
   } catch (error) {
-    console.error('Error eliminando categoría con tareas:', error);
+    console.error('Error deleting category with tasks:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error interno del servidor',
+      error: error instanceof Error ? error.message : 'Internal server error',
     };
   }
 };
 
 /**
- * Obtiene estadísticas de una categoría (número de tareas)
+ * Gets category statistics (number of tasks)
  */
-export const obtenerEstadisticasCategoria = async (
-  categoriaId: number,
-  usuarioId: number
-): Promise<ApiResponse<{ totalTareas: number; tareasCompletadas: number; tareasPendientes: number }>> => {
+export const getCategoryStatistics = async (
+  categoryId: number,
+  userId: number
+): Promise<
+  ApiResponse<{
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+  }>
+> => {
   try {
-    const resultado = await query(
+    const result = await query(
       `SELECT 
-         COUNT(*) as total_tareas,
-         COUNT(CASE WHEN completada = true THEN 1 END) as tareas_completadas,
-         COUNT(CASE WHEN completada = false THEN 1 END) as tareas_pendientes
-       FROM tareas 
-       WHERE categoria_id = $1 AND usuario_id = $2`,
-      [categoriaId, usuarioId]
+         COUNT(*) as total_tasks,
+         COUNT(CASE WHEN completed = true THEN 1 END) as completed_tasks,
+         COUNT(CASE WHEN completed = false THEN 1 END) as pending_tasks
+       FROM tasks 
+       WHERE category_id = $1 AND user_id = $2`,
+      [categoryId, userId]
     );
 
-    const stats = resultado.rows[0];
+    const stats = result.rows[0];
 
     return {
       success: true,
       data: {
-        totalTareas: parseInt(stats.total_tareas),
-        tareasCompletadas: parseInt(stats.tareas_completadas),
-        tareasPendientes: parseInt(stats.tareas_pendientes),
+        totalTasks: parseInt(stats.total_tasks),
+        completedTasks: parseInt(stats.completed_tasks),
+        pendingTasks: parseInt(stats.pending_tasks),
       },
     };
   } catch (error) {
-    console.error('Error obteniendo estadísticas de categoría:', error);
+    console.error('Error getting category statistics:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Genera un color hexadecimal aleatorio
+ * Generates a random hexadecimal color
  */
 const generateRandomColor = (): string => {
   const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
-    '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43',
-    '#10AC84', '#EE5A24', '#0984E3', '#6C5CE7', '#A29BFE',
-    '#FD79A8', '#E17055', '#00B894', '#00CEC9', '#6C5CE7'
+    '#FF6B6B',
+    '#4ECDC4',
+    '#45B7D1',
+    '#96CEB4',
+    '#FECA57',
+    '#FF9FF3',
+    '#54A0FF',
+    '#5F27CD',
+    '#00D2D3',
+    '#FF9F43',
+    '#10AC84',
+    '#EE5A24',
+    '#0984E3',
+    '#6C5CE7',
+    '#A29BFE',
+    '#FD79A8',
+    '#E17055',
+    '#00B894',
+    '#00CEC9',
+    '#6C5CE7',
   ];
-  
+
   const randomIndex = Math.floor(Math.random() * colors.length);
   return colors[randomIndex] || '#4ECDC4'; // Fallback color
 };

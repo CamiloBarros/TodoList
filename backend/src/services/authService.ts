@@ -1,17 +1,17 @@
 ﻿import bcrypt from 'bcryptjs';
 import { query, transaction } from '../config/database';
-import { 
-  User, 
-  UserCreation, 
-  UserLogin, 
+import {
+  User,
+  UserCreation,
+  UserLogin,
   PublicUser,
-  ApiResponse 
+  ApiResponse,
 } from '../types';
 import { generateToken } from '../middleware/auth';
 import appConfig from '../config/env';
 
 /**
- * Authentication Service
+ * Authentication service
  * Handles registration, login and user-related operations
  */
 
@@ -23,10 +23,9 @@ export const registerUser = async (
 ): Promise<ApiResponse<{ user: PublicUser; token: string }>> => {
   try {
     // Check if email already exists
-    const emailExists = await query(
-      'SELECT id FROM usuarios WHERE email = $1',
-      [userData.email]
-    );
+    const emailExists = await query('SELECT id FROM users WHERE email = $1', [
+      userData.email,
+    ]);
 
     if (emailExists.rows.length > 0) {
       return {
@@ -44,9 +43,9 @@ export const registerUser = async (
     // Create user in a transaction
     const result = await transaction(async (client) => {
       const newUser = await client.query(
-        `INSERT INTO usuarios (email, nombre, password_hash, activo) 
+        `INSERT INTO users (email, name, password_hash, active) 
          VALUES ($1, $2, $3, true) 
-         RETURNING id, email, nombre, creado_en, actualizado_en`,
+         RETURNING id, email, name, created_at, updated_at`,
         [userData.email, userData.name, passwordHash]
       );
 
@@ -56,9 +55,9 @@ export const registerUser = async (
     const publicUser: PublicUser = {
       id: result.id,
       email: result.email,
-      name: result.nombre,
-      created_at: result.creado_en,
-      updated_at: result.actualizado_en,
+      name: result.name,
+      created_at: result.created_at,
+      updated_at: result.updated_at,
     };
 
     // Generate JWT token
@@ -90,7 +89,7 @@ export const loginUser = async (
   try {
     // Find user by email
     const result = await query(
-      'SELECT id, email, nombre, password_hash, creado_en, actualizado_en, activo FROM usuarios WHERE email = $1',
+      'SELECT id, email, name, password_hash, created_at, updated_at, active FROM users WHERE email = $1',
       [credentials.email]
     );
 
@@ -104,7 +103,7 @@ export const loginUser = async (
     const user = result.rows[0];
 
     // Check if user is active
-    if (!user.activo) {
+    if (!user.active) {
       return {
         success: false,
         error: 'Account deactivated',
@@ -112,12 +111,12 @@ export const loginUser = async (
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(
+    const validPassword = await bcrypt.compare(
       credentials.password,
       user.password_hash
     );
 
-    if (!isPasswordValid) {
+    if (!validPassword) {
       return {
         success: false,
         error: 'Invalid credentials',
@@ -126,16 +125,16 @@ export const loginUser = async (
 
     // Update last login date
     await query(
-      'UPDATE usuarios SET actualizado_en = CURRENT_TIMESTAMP WHERE id = $1',
+      'UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
     );
 
     const publicUser: PublicUser = {
       id: user.id,
       email: user.email,
-      name: user.nombre,
-      created_at: user.creado_en,
-      updated_at: user.actualizado_en,
+      name: user.name,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
     };
 
     // Generate JWT token
@@ -166,7 +165,7 @@ export const getProfile = async (
 ): Promise<ApiResponse<PublicUser>> => {
   try {
     const result = await query(
-      'SELECT id, email, nombre, creado_en, actualizado_en FROM usuarios WHERE id = $1 AND activo = true',
+      'SELECT id, email, name, created_at, updated_at FROM users WHERE id = $1 AND active = true',
       [userId]
     );
 
@@ -177,13 +176,7 @@ export const getProfile = async (
       };
     }
 
-    const user: PublicUser = {
-      id: result.rows[0].id,
-      email: result.rows[0].email,
-      name: result.rows[0].nombre,
-      created_at: result.rows[0].creado_en,
-      updated_at: result.rows[0].actualizado_en,
-    };
+    const user: PublicUser = result.rows[0];
 
     return {
       success: true,
@@ -199,7 +192,7 @@ export const getProfile = async (
 };
 
 /**
- * Updates user profile
+ * Updates the user's profile
  */
 export const updateProfile = async (
   userId: number,
@@ -209,7 +202,7 @@ export const updateProfile = async (
     // Check if new email already exists (if changing)
     if (data.email) {
       const emailExists = await query(
-        'SELECT id FROM usuarios WHERE email = $1 AND id != $2',
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
         [data.email, userId]
       );
 
@@ -227,7 +220,7 @@ export const updateProfile = async (
     let counter = 1;
 
     if (data.name) {
-      fieldsToUpdate.push(`nombre = $${counter}`);
+      fieldsToUpdate.push(`name = $${counter}`);
       values.push(data.name);
       counter++;
     }
@@ -246,14 +239,14 @@ export const updateProfile = async (
     }
 
     // Add updated_at and user ID
-    fieldsToUpdate.push(`actualizado_en = CURRENT_TIMESTAMP`);
+    fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
     values.push(userId);
 
     const queryText = `
-      UPDATE usuarios 
+      UPDATE users 
       SET ${fieldsToUpdate.join(', ')} 
-      WHERE id = $${values.length} AND activo = true
-      RETURNING id, email, nombre, creado_en, actualizado_en
+      WHERE id = $${values.length} AND active = true
+      RETURNING id, email, name, created_at, updated_at
     `;
 
     const result = await query(queryText, values);
@@ -265,13 +258,7 @@ export const updateProfile = async (
       };
     }
 
-    const updatedUser: PublicUser = {
-      id: result.rows[0].id,
-      email: result.rows[0].email,
-      name: result.rows[0].nombre,
-      created_at: result.rows[0].creado_en,
-      updated_at: result.rows[0].actualizado_en,
-    };
+    const updatedUser: PublicUser = result.rows[0];
 
     return {
       success: true,
@@ -288,7 +275,7 @@ export const updateProfile = async (
 };
 
 /**
- * Changes user password
+ * Changes user's password
  */
 export const changePassword = async (
   userId: number,
@@ -298,7 +285,7 @@ export const changePassword = async (
   try {
     // Get current password hash
     const result = await query(
-      'SELECT password_hash FROM usuarios WHERE id = $1 AND activo = true',
+      'SELECT password_hash FROM users WHERE id = $1 AND active = true',
       [userId]
     );
 
@@ -310,12 +297,12 @@ export const changePassword = async (
     }
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(
+    const validPassword = await bcrypt.compare(
       currentPassword,
       result.rows[0].password_hash
     );
 
-    if (!isPasswordValid) {
+    if (!validPassword) {
       return {
         success: false,
         error: 'Current password is incorrect',
@@ -330,7 +317,7 @@ export const changePassword = async (
 
     // Update password
     await query(
-      'UPDATE usuarios SET password_hash = $1, actualizado_en = CURRENT_TIMESTAMP WHERE id = $2',
+      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
       [newPasswordHash, userId]
     );
 
@@ -348,14 +335,14 @@ export const changePassword = async (
 };
 
 /**
- * Deactivates user account
+ * Deactivates user's account
  */
 export const deactivateAccount = async (
   userId: number
 ): Promise<ApiResponse<void>> => {
   try {
     const result = await query(
-      'UPDATE usuarios SET activo = false, actualizado_en = CURRENT_TIMESTAMP WHERE id = $1 AND activo = true',
+      'UPDATE users SET active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND active = true',
       [userId]
     );
 

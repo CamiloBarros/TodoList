@@ -269,7 +269,7 @@ export interface AppConfig {
 }
 
 // Statistics
-export interface UserStats {
+export interface UserStatistics {
   totalTasks: number;
   completedTasks: number;
   pendingTasks: number;
@@ -291,7 +291,7 @@ export interface UserStats {
   }[];
 }
 
-export interface CategoryStats {
+export interface CategoryStatistics {
   category_id: number;
   name: string;
   color: string;
@@ -307,7 +307,7 @@ export interface CategoryStats {
   completion_percentage: number;
 }
 
-export interface TagStats {
+export interface TagStatistics {
   tag_id: number;
   name: string;
   color: string;
@@ -333,7 +333,7 @@ export enum ErrorCode {
   DATABASE_ERROR = 'DATABASE_ERROR',
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
   RATE_LIMIT_ERROR = 'RATE_LIMIT_ERROR',
-  FILE_UPLOAD_ERROR = 'FILE_UPLOAD_ERROR'
+  FILE_UPLOAD_ERROR = 'FILE_UPLOAD_ERROR',
 }
 
 export class DatabaseError extends Error {
@@ -368,4 +368,3 @@ export interface HealthStatus {
     responseTime?: number;
   };
 }
-

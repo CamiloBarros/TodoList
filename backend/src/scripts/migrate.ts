@@ -131,15 +131,15 @@ export const resetDatabase = async (): Promise<void> => {
 
     // Drop all tables in reverse dependency order
     const dropTablesQuery = `
-      DROP TABLE IF EXISTS tarea_etiquetas CASCADE;
-      DROP TABLE IF EXISTS etiquetas CASCADE;
-      DROP TABLE IF EXISTS tareas CASCADE;
-      DROP TABLE IF EXISTS categorias CASCADE;
-      DROP TABLE IF EXISTS usuarios CASCADE;
+      DROP TABLE IF EXISTS task_tags CASCADE;
+      DROP TABLE IF EXISTS tags CASCADE;
+      DROP TABLE IF EXISTS tasks CASCADE;
+      DROP TABLE IF EXISTS categories CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
       DROP TABLE IF EXISTS migrations CASCADE;
-      DROP TYPE IF EXISTS prioridad_enum CASCADE;
-      DROP FUNCTION IF EXISTS update_actualizado_en_column() CASCADE;
-      DROP FUNCTION IF EXISTS set_completada_en() CASCADE;
+      DROP TYPE IF EXISTS priority_enum CASCADE;
+      DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+      DROP FUNCTION IF EXISTS set_completed_at() CASCADE;
     `;
 
     await pool.query(dropTablesQuery);

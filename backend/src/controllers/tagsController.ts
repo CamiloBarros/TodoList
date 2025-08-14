@@ -4,32 +4,31 @@ import { AuthenticatedRequest } from '../types';
 import * as tagsService from '../services/tagsService';
 
 /**
- * Obtener todas las etiquetas del usuario
+ * Get all user tags
  */
-export const obtenerEtiquetas = async (
+export const getTags = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const usuarioId = req.user.id;
-    const etiquetas = await tagsService.obtenerEtiquetas(usuarioId);
+    const userId = req.user.id;
+    const tags = await tagsService.getTags(userId);
 
     res.status(200).json({
       success: true,
       data: {
-        etiquetas,
-        total: etiquetas.length,
+        tags,
+        total: tags.length,
       },
-      message: etiquetas.length > 0 
-        ? `Se encontraron ${etiquetas.length} etiqueta(s)`
-        : 'No se encontraron etiquetas'
+      message:
+        tags.length > 0 ? `Found ${tags.length} tag(s)` : 'No tags found',
     });
   } catch (error: any) {
-    console.error('Error al obtener etiquetas:', error);
+    console.error('Error getting tags:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor al obtener etiquetas',
+        message: 'Internal server error getting tags',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -39,20 +38,20 @@ export const obtenerEtiquetas = async (
 };
 
 /**
- * Obtener una etiqueta específica por ID
+ * Get a specific tag by ID
  */
-export const obtenerEtiquetaPorId = async (
+export const getTagById = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    // Verificar errores de validación
+    // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'Datos de entrada inválidos',
+          message: 'Invalid input data',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -62,16 +61,16 @@ export const obtenerEtiquetaPorId = async (
       return;
     }
 
-    const usuarioId = req.user.id;
-    const etiquetaId = parseInt(req.params.id as string);
+    const userId = req.user.id;
+    const tagId = parseInt(req.params.id as string);
 
-    const etiqueta = await tagsService.obtenerEtiquetaPorId(etiquetaId, usuarioId);
+    const tag = await tagsService.getTagById(tagId, userId);
 
-    if (!etiqueta) {
+    if (!tag) {
       res.status(404).json({
         success: false,
         error: {
-          message: 'Etiqueta no encontrada',
+          message: 'Tag not found',
           type: 'NOT_FOUND_ERROR',
           statusCode: 404,
           timestamp: new Date().toISOString(),
@@ -82,15 +81,15 @@ export const obtenerEtiquetaPorId = async (
 
     res.status(200).json({
       success: true,
-      data: etiqueta,
-      message: 'Etiqueta obtenida exitosamente'
+      data: tag,
+      message: 'Tag retrieved successfully',
     });
   } catch (error: any) {
-    console.error('Error al obtener etiqueta por ID:', error);
+    console.error('Error getting tag by ID:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor al obtener la etiqueta',
+        message: 'Internal server error getting the tag',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -100,20 +99,20 @@ export const obtenerEtiquetaPorId = async (
 };
 
 /**
- * Crear una nueva etiqueta
+ * Create a new tag
  */
-export const crearEtiqueta = async (
+export const createTag = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    // Verificar errores de validación
+    // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'Datos de entrada inválidos',
+          message: 'Invalid input data',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -123,20 +122,20 @@ export const crearEtiqueta = async (
       return;
     }
 
-    const usuarioId = req.user.id;
-    const etiquetaData = req.body;
+    const userId = req.user.id;
+    const tagData = req.body;
 
-    const nuevaEtiqueta = await tagsService.crearEtiqueta(etiquetaData, usuarioId);
+    const newTag = await tagsService.createTag(tagData, userId);
 
     res.status(201).json({
       success: true,
-      data: nuevaEtiqueta,
-      message: `Etiqueta "${nuevaEtiqueta.nombre}" creada exitosamente`
+      data: newTag,
+      message: `Tag "${newTag.name}" created successfully`,
     });
   } catch (error: any) {
-    console.error('Error al crear etiqueta:', error);
+    console.error('Error creating tag:', error);
 
-    // Manejar errores específicos
+    // Handle specific errors
     if (error.code === 'VALIDATION_ERROR') {
       res.status(400).json({
         success: false,
@@ -154,7 +153,7 @@ export const crearEtiqueta = async (
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor al crear la etiqueta',
+        message: 'Internal server error creating the tag',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -164,20 +163,20 @@ export const crearEtiqueta = async (
 };
 
 /**
- * Actualizar una etiqueta existente
+ * Update an existing tag
  */
-export const actualizarEtiqueta = async (
+export const updateTag = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    // Verificar errores de validación
+    // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'Datos de entrada inválidos',
+          message: 'Invalid input data',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -187,21 +186,17 @@ export const actualizarEtiqueta = async (
       return;
     }
 
-    const usuarioId = req.user.id;
-    const etiquetaId = parseInt(req.params.id as string);
-    const etiquetaData = req.body;
+    const userId = req.user.id;
+    const tagId = parseInt(req.params.id as string);
+    const tagData = req.body;
 
-    const etiquetaActualizada = await tagsService.actualizarEtiqueta(
-      etiquetaId,
-      etiquetaData,
-      usuarioId
-    );
+    const updatedTag = await tagsService.updateTag(tagId, tagData, userId);
 
-    if (!etiquetaActualizada) {
+    if (!updatedTag) {
       res.status(404).json({
         success: false,
         error: {
-          message: 'Etiqueta no encontrada',
+          message: 'Tag not found',
           type: 'NOT_FOUND_ERROR',
           statusCode: 404,
           timestamp: new Date().toISOString(),
@@ -212,13 +207,13 @@ export const actualizarEtiqueta = async (
 
     res.status(200).json({
       success: true,
-      data: etiquetaActualizada,
-      message: `Etiqueta "${etiquetaActualizada.nombre}" actualizada exitosamente`
+      data: updatedTag,
+      message: `Tag "${updatedTag.name}" updated successfully`,
     });
   } catch (error: any) {
-    console.error('Error al actualizar etiqueta:', error);
+    console.error('Error updating tag:', error);
 
-    // Manejar errores específicos
+    // Handle specific errors
     if (error.code === 'VALIDATION_ERROR') {
       res.status(400).json({
         success: false,
@@ -236,7 +231,7 @@ export const actualizarEtiqueta = async (
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor al actualizar la etiqueta',
+        message: 'Internal server error updating the tag',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -246,20 +241,20 @@ export const actualizarEtiqueta = async (
 };
 
 /**
- * Eliminar una etiqueta (solo si no tiene tareas asociadas)
+ * Delete a tag (only if it has no associated tasks)
  */
-export const eliminarEtiqueta = async (
+export const deleteTag = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    // Verificar errores de validación
+    // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'Datos de entrada inválidos',
+          message: 'Invalid input data',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -269,17 +264,17 @@ export const eliminarEtiqueta = async (
       return;
     }
 
-    const usuarioId = req.user.id;
-    const etiquetaId = parseInt(req.params.id as string);
+    const userId = req.user.id;
+    const tagId = parseInt(req.params.id as string);
 
-    const resultado = await tagsService.eliminarEtiqueta(etiquetaId, usuarioId);
+    const result = await tagsService.deleteTag(tagId, userId);
 
-    if (!resultado.eliminada) {
-      if (resultado.mensaje === 'Etiqueta no encontrada') {
+    if (!result.deleted) {
+      if (result.message === 'Tag not found') {
         res.status(404).json({
           success: false,
           error: {
-            message: resultado.mensaje,
+            message: result.message,
             type: 'NOT_FOUND_ERROR',
             statusCode: 404,
             timestamp: new Date().toISOString(),
@@ -289,7 +284,7 @@ export const eliminarEtiqueta = async (
         res.status(409).json({
           success: false,
           error: {
-            message: resultado.mensaje,
+            message: result.message,
             type: 'CONFLICT_ERROR',
             statusCode: 409,
             timestamp: new Date().toISOString(),
@@ -301,15 +296,15 @@ export const eliminarEtiqueta = async (
 
     res.status(200).json({
       success: true,
-      data: { eliminada: true },
-      message: resultado.mensaje
+      data: { deleted: true },
+      message: result.message,
     });
   } catch (error: any) {
-    console.error('Error al eliminar etiqueta:', error);
+    console.error('Error deleting tag:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor al eliminar la etiqueta',
+        message: 'Internal server error deleting the tag',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -319,20 +314,20 @@ export const eliminarEtiqueta = async (
 };
 
 /**
- * Eliminar una etiqueta forzadamente (eliminando también sus asociaciones)
+ * Delete a tag forcefully (removing its associations as well)
  */
-export const eliminarEtiquetaForzar = async (
+export const forceDeleteTag = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    // Verificar errores de validación
+    // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'Datos de entrada inválidos',
+          message: 'Invalid input data',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -342,16 +337,16 @@ export const eliminarEtiquetaForzar = async (
       return;
     }
 
-    const usuarioId = req.user.id;
-    const etiquetaId = parseInt(req.params.id as string);
+    const userId = req.user.id;
+    const tagId = parseInt(req.params.id as string);
 
-    const resultado = await tagsService.eliminarEtiquetaForzar(etiquetaId, usuarioId);
+    const result = await tagsService.forceDeleteTag(tagId, userId);
 
-    if (!resultado.eliminada) {
+    if (!result.deleted) {
       res.status(404).json({
         success: false,
         error: {
-          message: resultado.mensaje,
+          message: result.message,
           type: 'NOT_FOUND_ERROR',
           statusCode: 404,
           timestamp: new Date().toISOString(),
@@ -359,134 +354,135 @@ export const eliminarEtiquetaForzar = async (
       });
       return;
     }
-
-    res.status(200).json({
-      success: true,
-      data: { 
-        eliminada: true,
-        tareasAfectadas: resultado.tareasAfectadas 
-      },
-      message: resultado.mensaje
-    });
-  } catch (error: any) {
-    console.error('Error al eliminar etiqueta forzadamente:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        message: 'Error interno del servidor al eliminar la etiqueta',
-        type: 'INTERNAL_SERVER_ERROR',
-        statusCode: 500,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-/**
- * Obtener estadísticas de una etiqueta
- */
-export const obtenerEstadisticasEtiqueta = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  try {
-    // Verificar errores de validación
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({
-        success: false,
-        error: {
-          message: 'Datos de entrada inválidos',
-          type: 'VALIDATION_ERROR',
-          statusCode: 400,
-          timestamp: new Date().toISOString(),
-          details: errors.array(),
-        },
-      });
-      return;
-    }
-
-    const usuarioId = req.user.id;
-    const etiquetaId = parseInt(req.params.id as string);
-
-    const estadisticas = await tagsService.obtenerEstadisticasEtiqueta(etiquetaId, usuarioId);
-
-    if (!estadisticas) {
-      res.status(404).json({
-        success: false,
-        error: {
-          message: 'Etiqueta no encontrada',
-          type: 'NOT_FOUND_ERROR',
-          statusCode: 404,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    res.status(200).json({
-      success: true,
-      data: estadisticas,
-      message: 'Estadísticas de etiqueta obtenidas exitosamente'
-    });
-  } catch (error: any) {
-    console.error('Error al obtener estadísticas de etiqueta:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        message: 'Error interno del servidor al obtener estadísticas',
-        type: 'INTERNAL_SERVER_ERROR',
-        statusCode: 500,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  }
-};
-
-/**
- * Obtener etiquetas más usadas del usuario
- */
-export const obtenerEtiquetasMasUsadas = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  try {
-    const usuarioId = req.user.id;
-    const limite = parseInt(req.query.limite as string) || 10;
-
-    // Validar límite
-    if (limite < 1 || limite > 50) {
-      res.status(400).json({
-        success: false,
-        error: {
-          message: 'El límite debe ser un número entre 1 y 50',
-          type: 'VALIDATION_ERROR',
-          statusCode: 400,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return;
-    }
-
-    const etiquetas = await tagsService.obtenerEtiquetasMasUsadas(usuarioId, limite);
 
     res.status(200).json({
       success: true,
       data: {
-        etiquetas,
-        total: etiquetas.length,
-        limite
+        deleted: true,
+        affectedTasks: result.affectedTasks,
       },
-      message: etiquetas.length > 0 
-        ? `Se encontraron ${etiquetas.length} etiqueta(s) más usada(s)`
-        : 'No se encontraron etiquetas con uso'
+      message: result.message,
     });
   } catch (error: any) {
-    console.error('Error al obtener etiquetas más usadas:', error);
+    console.error('Error force deleting tag:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor al obtener etiquetas más usadas',
+        message: 'Internal server error deleting the tag',
+        type: 'INTERNAL_SERVER_ERROR',
+        statusCode: 500,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
+/**
+ * Get tag statistics
+ */
+export const getTagStatistics = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid input data',
+          type: 'VALIDATION_ERROR',
+          statusCode: 400,
+          timestamp: new Date().toISOString(),
+          details: errors.array(),
+        },
+      });
+      return;
+    }
+
+    const userId = req.user.id;
+    const tagId = parseInt(req.params.id as string);
+
+    const statistics = await tagsService.getTagStatistics(tagId, userId);
+
+    if (!statistics) {
+      res.status(404).json({
+        success: false,
+        error: {
+          message: 'Tag not found',
+          type: 'NOT_FOUND_ERROR',
+          statusCode: 404,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: statistics,
+      message: 'Tag statistics retrieved successfully',
+    });
+  } catch (error: any) {
+    console.error('Error getting tag statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error getting statistics',
+        type: 'INTERNAL_SERVER_ERROR',
+        statusCode: 500,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
+
+/**
+ * Get user's most used tags
+ */
+export const getMostUsedTags = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limite as string) || 10;
+
+    // Validate limit
+    if (limit < 1 || limit > 50) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Limit must be a number between 1 and 50',
+          type: 'VALIDATION_ERROR',
+          statusCode: 400,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      return;
+    }
+
+    const tags = await tagsService.getMostUsedTags(userId, limit);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        tags,
+        total: tags.length,
+        limit,
+      },
+      message:
+        tags.length > 0
+          ? `Found ${tags.length} most used tag(s)`
+          : 'No tags with usage found',
+    });
+  } catch (error: any) {
+    console.error('Error getting most used tags:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error getting most used tags',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),

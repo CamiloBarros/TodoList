@@ -3,36 +3,37 @@ import { AuthenticatedRequest } from '../types';
 import * as authService from '../services/authService';
 
 /**
- * Controller de autenticación
- * Maneja todas las rutas relacionadas con autenticación y gestión de usuarios
+ * Authentication controller
+ * Handles all routes related to authentication and user management
  */
 
 /**
- * POST /api/auth/registro
- * Registra un nuevo usuario
+ * POST /api/auth/register
+ * Register a new user
  */
-export const registro = async (req: Request, res: Response): Promise<void> => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, name, password } = req.body;
 
-    const resultado = await authService.registerUser({
+    const result = await authService.registerUser({
       email,
       name,
       password,
     });
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(201).json({
         success: true,
-        data: resultado.data,
-        message: resultado.message,
+        data: result.data,
+        message: result.message,
       });
     } else {
-      const statusCode = resultado.error === 'El email ya está registrado' ? 409 : 400;
+      const statusCode =
+        result.error === 'Email is already registered' ? 409 : 400;
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'REGISTRATION_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -40,11 +41,11 @@ export const registro = async (req: Request, res: Response): Promise<void> => {
       });
     }
   } catch (error) {
-    console.error('Error en registro controller:', error);
+    console.error('Error in register controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -55,31 +56,30 @@ export const registro = async (req: Request, res: Response): Promise<void> => {
 
 /**
  * POST /api/auth/login
- * Autentica un usuario existente
+ * Authenticate an existing user
  */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    const resultado = await authService.loginUser({
+    const result = await authService.loginUser({
       email,
       password,
     });
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
-        message: resultado.message,
+        data: result.data,
+        message: result.message,
       });
     } else {
-      const statusCode = 
-        resultado.error === 'Cuenta desactivada' ? 403 : 401;
-      
+      const statusCode = result.error === 'Account deactivated' ? 403 : 401;
+
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'AUTHENTICATION_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -87,11 +87,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       });
     }
   } catch (error) {
-    console.error('Error en login controller:', error);
+    console.error('Error in login controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -101,23 +101,26 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * GET /api/auth/perfil
- * Obtiene el perfil del usuario autenticado
+ * GET /api/auth/profile
+ * Get authenticated user profile
  */
-export const perfil = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const profile = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const resultado = await authService.getProfile(req.user.id);
+    const result = await authService.getProfile(req.user.id);
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
+        data: result.data,
       });
     } else {
       res.status(404).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'USER_NOT_FOUND',
           statusCode: 404,
           timestamp: new Date().toISOString(),
@@ -125,11 +128,11 @@ export const perfil = async (req: AuthenticatedRequest, res: Response): Promise<
       });
     }
   } catch (error) {
-    console.error('Error en perfil controller:', error);
+    console.error('Error in profile controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -139,33 +142,39 @@ export const perfil = async (req: AuthenticatedRequest, res: Response): Promise<
 };
 
 /**
- * PUT /api/auth/perfil
- * Actualiza el perfil del usuario autenticado
+ * PUT /api/auth/profile
+ * Update authenticated user profile
  */
-export const actualizarPerfil = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const updateProfile = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { name, email } = req.body;
 
-    const resultado = await authService.updateProfile(req.user.id, {
+    const result = await authService.updateProfile(req.user.id, {
       name,
       email,
     });
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        data: resultado.data,
-        message: resultado.message,
+        data: result.data,
+        message: result.message,
       });
     } else {
-      const statusCode = 
-        resultado.error === 'El email ya está en uso' ? 409 : 
-        resultado.error === 'Usuario no encontrado' ? 404 : 400;
-      
+      const statusCode =
+        result.error === 'Email is already in use'
+          ? 409
+          : result.error === 'User not found'
+            ? 404
+            : 400;
+
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'PROFILE_UPDATE_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -173,11 +182,11 @@ export const actualizarPerfil = async (req: AuthenticatedRequest, res: Response)
       });
     }
   } catch (error) {
-    console.error('Error en actualizar perfil controller:', error);
+    console.error('Error in update profile controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -187,33 +196,39 @@ export const actualizarPerfil = async (req: AuthenticatedRequest, res: Response)
 };
 
 /**
- * POST /api/auth/cambiar-password
- * Cambia la contraseña del usuario autenticado
+ * POST /api/auth/change-password
+ * Change authenticated user password
  */
-export const cambiarPassword = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const changePassword = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const { passwordActual, passwordNueva } = req.body;
+    const { currentPassword, newPassword } = req.body;
 
-    const resultado = await authService.changePassword(
+    const result = await authService.changePassword(
       req.user.id,
-      passwordActual,
-      passwordNueva
+      currentPassword,
+      newPassword
     );
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        message: resultado.message,
+        message: result.message,
       });
     } else {
-      const statusCode = 
-        resultado.error === 'Contraseña actual incorrecta' ? 400 : 
-        resultado.error === 'Usuario no encontrado' ? 404 : 400;
-      
+      const statusCode =
+        result.error === 'Current password is incorrect'
+          ? 400
+          : result.error === 'User not found'
+            ? 404
+            : 400;
+
       res.status(statusCode).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'PASSWORD_CHANGE_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
@@ -221,11 +236,11 @@ export const cambiarPassword = async (req: AuthenticatedRequest, res: Response):
       });
     }
   } catch (error) {
-    console.error('Error en cambiar password controller:', error);
+    console.error('Error in change password controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -235,23 +250,26 @@ export const cambiarPassword = async (req: AuthenticatedRequest, res: Response):
 };
 
 /**
- * DELETE /api/auth/cuenta
- * Desactiva la cuenta del usuario autenticado
+ * DELETE /api/auth/account
+ * Deactivate authenticated user account
  */
-export const desactivarCuenta = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const deactivateAccount = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const resultado = await authService.deactivateAccount(req.user.id);
+    const result = await authService.deactivateAccount(req.user.id);
 
-    if (resultado.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        message: resultado.message,
+        message: result.message,
       });
     } else {
       res.status(404).json({
         success: false,
         error: {
-          message: resultado.error,
+          message: result.error,
           type: 'USER_NOT_FOUND',
           statusCode: 404,
           timestamp: new Date().toISOString(),
@@ -259,11 +277,11 @@ export const desactivarCuenta = async (req: AuthenticatedRequest, res: Response)
       });
     }
   } catch (error) {
-    console.error('Error en desactivar cuenta controller:', error);
+    console.error('Error in deactivate account controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -273,26 +291,29 @@ export const desactivarCuenta = async (req: AuthenticatedRequest, res: Response)
 };
 
 /**
- * POST /api/auth/verificar-token
- * Verifica si un token JWT es válido
+ * POST /api/auth/verify-token
+ * Verify if a JWT token is valid
  */
-export const verificarToken = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const verifyToken = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
-    // Si llegamos aquí, el token es válido (pasó por el middleware de autenticación)
+    // If we get here, the token is valid (passed through authentication middleware)
     res.status(200).json({
       success: true,
       data: {
-        valido: true,
-        usuario: req.user,
+        valid: true,
+        user: req.user,
       },
-      message: 'Token válido',
+      message: 'Valid token',
     });
   } catch (error) {
-    console.error('Error en verificar token controller:', error);
+    console.error('Error in verify token controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -303,22 +324,25 @@ export const verificarToken = async (req: AuthenticatedRequest, res: Response): 
 
 /**
  * POST /api/auth/logout
- * Cierra sesión del usuario (principalmente para el frontend)
+ * Log out user (mainly for frontend)
  */
-export const logout = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const logout = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
-    // En JWT, el logout se maneja en el cliente eliminando el token
-    // Aquí podríamos agregar el token a una blacklist en Redis si fuera necesario
+    // In JWT, logout is handled on the client by removing the token
+    // Here we could add the token to a blacklist in Redis if necessary
     res.status(200).json({
       success: true,
-      message: 'Logout exitoso',
+      message: 'Successful logout',
     });
   } catch (error) {
-    console.error('Error en logout controller:', error);
+    console.error('Error in logout controller:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),

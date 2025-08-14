@@ -1,51 +1,51 @@
--- Migration 002: Create categorias table
+-- Migration 002: Create categories table
 -- Description: Categories for organizing tasks
 -- Date: 2025-08-13
 
 BEGIN;
 
--- Create categorias table
-CREATE TABLE IF NOT EXISTS categorias (
+-- Create categories table
+CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
-    usuario_id INTEGER NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
+    user_id INTEGER NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
     color VARCHAR(7) DEFAULT '#3B82F6',
-    creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- Foreign Key Constraints
-    CONSTRAINT fk_categorias_usuario 
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT fk_categories_user 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     
     -- Business Logic Constraints
-    CONSTRAINT categorias_nombre_length 
-        CHECK (char_length(nombre) >= 1 AND char_length(nombre) <= 100),
-    CONSTRAINT categorias_color_format 
+    CONSTRAINT categories_name_length 
+        CHECK (char_length(name) >= 1 AND char_length(name) <= 100),
+    CONSTRAINT categories_color_format 
         CHECK (color ~* '^#[0-9A-Fa-f]{6}$'),
     
     -- Unique constraint per user
-    CONSTRAINT uk_categorias_usuario_nombre 
-        UNIQUE (usuario_id, nombre)
+    CONSTRAINT uk_categories_user_name 
+        UNIQUE (user_id, name)
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_categorias_usuario_id ON categorias(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_categorias_nombre ON categorias(nombre);
-CREATE INDEX IF NOT EXISTS idx_categorias_creado_en ON categorias(creado_en);
+CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
+CREATE INDEX IF NOT EXISTS idx_categories_created_at ON categories(created_at);
 
--- Create trigger for categorias table
-CREATE TRIGGER update_categorias_actualizado_en 
-    BEFORE UPDATE ON categorias 
+-- Create trigger for categories table
+CREATE TRIGGER update_categories_updated_at 
+    BEFORE UPDATE ON categories 
     FOR EACH ROW 
-    EXECUTE FUNCTION update_actualizado_en_column();
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- Add comments for documentation
-COMMENT ON TABLE categorias IS 'User-defined categories for organizing tasks';
-COMMENT ON COLUMN categorias.id IS 'Primary key, auto-incrementing category ID';
-COMMENT ON COLUMN categorias.usuario_id IS 'Foreign key to usuarios table';
-COMMENT ON COLUMN categorias.nombre IS 'Category name, unique per user';
-COMMENT ON COLUMN categorias.descripcion IS 'Optional category description';
-COMMENT ON COLUMN categorias.color IS 'Hex color code for visual identification';
+COMMENT ON TABLE categories IS 'User-defined categories for organizing tasks';
+COMMENT ON COLUMN categories.id IS 'Primary key, auto-incrementing category ID';
+COMMENT ON COLUMN categories.user_id IS 'Foreign key to users table';
+COMMENT ON COLUMN categories.name IS 'Category name, unique per user';
+COMMENT ON COLUMN categories.description IS 'Optional category description';
+COMMENT ON COLUMN categories.color IS 'Hex color code for visual identification';
 
 COMMIT;

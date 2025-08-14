@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 import { getConfig } from '../config/env';
-import { Prioridad } from '../types';
+import { Priority } from '../types';
 
 /**
  * Database Seeding Script
@@ -20,28 +20,28 @@ const pool = new Pool({
 
 interface SampleUser {
   email: string;
-  nombre: string;
+  name: string;
   password: string;
 }
 
 interface SampleCategory {
-  nombre: string;
-  descripcion: string;
+  name: string;
+  description: string;
   color: string;
 }
 
 interface SampleTag {
-  nombre: string;
+  name: string;
   color: string;
 }
 
 interface SampleTask {
-  titulo: string;
-  descripcion: string;
-  prioridad: Prioridad;
-  fecha_vencimiento?: Date;
-  categoria: string;
-  etiquetas: string[];
+  title: string;
+  description: string;
+  priority: Priority;
+  due_date?: Date;
+  category: string;
+  tags: string[];
 }
 
 /**
@@ -50,17 +50,17 @@ interface SampleTask {
 const sampleUsers: SampleUser[] = [
   {
     email: 'admin@todolist.com',
-    nombre: 'Administrator',
+    name: 'Administrator',
     password: 'admin123',
   },
   {
     email: 'user1@example.com',
-    nombre: 'Juan Pérez',
+    name: 'Juan Pérez',
     password: 'user123',
   },
   {
     email: 'user2@example.com',
-    nombre: 'María García',
+    name: 'María García',
     password: 'user123',
   },
 ];
@@ -70,28 +70,28 @@ const sampleUsers: SampleUser[] = [
  */
 const sampleCategories: SampleCategory[] = [
   {
-    nombre: 'Trabajo',
-    descripcion: 'Tareas relacionadas con el trabajo',
+    name: 'Work',
+    description: 'Work-related tasks',
     color: '#3B82F6',
   },
   {
-    nombre: 'Personal',
-    descripcion: 'Tareas personales y domésticas',
+    name: 'Personal',
+    description: 'Personal and household tasks',
     color: '#10B981',
   },
   {
-    nombre: 'Estudios',
-    descripcion: 'Tareas académicas y de aprendizaje',
+    name: 'Studies',
+    description: 'Academic and learning tasks',
     color: '#F59E0B',
   },
   {
-    nombre: 'Salud',
-    descripcion: 'Citas médicas y ejercicio',
+    name: 'Health',
+    description: 'Medical appointments and exercise',
     color: '#EF4444',
   },
   {
-    nombre: 'Compras',
-    descripcion: 'Lista de compras y diligencias',
+    name: 'Shopping',
+    description: 'Shopping list and errands',
     color: '#8B5CF6',
   },
 ];
@@ -100,14 +100,14 @@ const sampleCategories: SampleCategory[] = [
  * Sample tags data
  */
 const sampleTags: SampleTag[] = [
-  { nombre: 'urgente', color: '#EF4444' },
-  { nombre: 'importante', color: '#F59E0B' },
-  { nombre: 'reunión', color: '#3B82F6' },
-  { nombre: 'llamada', color: '#10B981' },
-  { nombre: 'email', color: '#6B7280' },
-  { nombre: 'documento', color: '#8B5CF6' },
-  { nombre: 'revisión', color: '#F97316' },
-  { nombre: 'proyecto', color: '#06B6D4' },
+  { name: 'urgent', color: '#EF4444' },
+  { name: 'important', color: '#F59E0B' },
+  { name: 'meeting', color: '#3B82F6' },
+  { name: 'call', color: '#10B981' },
+  { name: 'email', color: '#6B7280' },
+  { name: 'document', color: '#8B5CF6' },
+  { name: 'review', color: '#F97316' },
+  { name: 'project', color: '#06B6D4' },
 ];
 
 /**
@@ -115,50 +115,50 @@ const sampleTags: SampleTag[] = [
  */
 const sampleTasks: SampleTask[] = [
   {
-    titulo: 'Revisar correos electrónicos',
-    descripcion: 'Revisar y responder correos pendientes de la semana',
-    prioridad: 'alta',
-    fecha_vencimiento: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-    categoria: 'Trabajo',
-    etiquetas: ['email', 'importante'],
+    title: 'Check emails',
+    description: 'Review and respond to pending emails from the week',
+    priority: 'high',
+    due_date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+    category: 'Work',
+    tags: ['email', 'important'],
   },
   {
-    titulo: 'Comprar víveres',
-    descripcion: 'Leche, pan, frutas, verduras',
-    prioridad: 'media',
-    fecha_vencimiento: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
-    categoria: 'Compras',
-    etiquetas: ['urgente'],
+    title: 'Buy groceries',
+    description: 'Milk, bread, fruits, vegetables',
+    priority: 'medium',
+    due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
+    category: 'Shopping',
+    tags: ['urgent'],
   },
   {
-    titulo: 'Llamar al dentista',
-    descripcion: 'Agendar cita para limpieza dental',
-    prioridad: 'baja',
-    categoria: 'Salud',
-    etiquetas: ['llamada'],
+    title: 'Call the dentist',
+    description: 'Schedule appointment for dental cleaning',
+    priority: 'low',
+    category: 'Health',
+    tags: ['call'],
   },
   {
-    titulo: 'Completar proyecto React',
-    descripcion: 'Finalizar componentes pendientes y hacer testing',
-    prioridad: 'alta',
-    fecha_vencimiento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week
-    categoria: 'Trabajo',
-    etiquetas: ['proyecto', 'importante'],
+    title: 'Complete React project',
+    description: 'Finish pending components and do testing',
+    priority: 'high',
+    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week
+    category: 'Work',
+    tags: ['project', 'important'],
   },
   {
-    titulo: 'Estudiar para examen',
-    descripcion: 'Repasar capítulos 5-8 del libro de matemáticas',
-    prioridad: 'alta',
-    fecha_vencimiento: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days
-    categoria: 'Estudios',
-    etiquetas: ['importante', 'revisión'],
+    title: 'Study for exam',
+    description: 'Review chapters 5-8 of the math book',
+    priority: 'high',
+    due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days
+    category: 'Studies',
+    tags: ['important', 'review'],
   },
   {
-    titulo: 'Ejercicio en el gimnasio',
-    descripcion: 'Rutina de cardio y pesas',
-    prioridad: 'media',
-    categoria: 'Salud',
-    etiquetas: [],
+    title: 'Gym workout',
+    description: 'Cardio and weight routine',
+    priority: 'medium',
+    category: 'Health',
+    tags: [],
   },
 ];
 
@@ -182,8 +182,8 @@ const insertUsers = async (): Promise<number[]> => {
       const hashedPassword = await hashPassword(user.password);
 
       const result = await pool.query(
-        'INSERT INTO usuarios (email, nombre, password_hash) VALUES ($1, $2, $3) RETURNING id',
-        [user.email, user.nombre, hashedPassword]
+        'INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3) RETURNING id',
+        [user.email, user.name, hashedPassword]
       );
 
       userIds.push(result.rows[0].id);
@@ -192,7 +192,7 @@ const insertUsers = async (): Promise<number[]> => {
       if (error.code === '23505') {
         console.log(`⏭️ User already exists: ${user.email}`);
         const existingUser = await pool.query(
-          'SELECT id FROM usuarios WHERE email = $1',
+          'SELECT id FROM users WHERE email = $1',
           [user.email]
         );
         userIds.push(existingUser.rows[0].id);
@@ -221,24 +221,22 @@ const insertCategories = async (
     for (const category of sampleCategories) {
       try {
         const result = await pool.query(
-          'INSERT INTO categorias (usuario_id, nombre, descripcion, color) VALUES ($1, $2, $3, $4) RETURNING id',
-          [userId, category.nombre, category.descripcion, category.color]
+          'INSERT INTO categories (user_id, name, description, color) VALUES ($1, $2, $3, $4) RETURNING id',
+          [userId, category.name, category.description, category.color]
         );
 
-        categoryMap.get(userId)![category.nombre] = result.rows[0].id;
-        console.log(
-          `✅ Category created: ${category.nombre} for user ${userId}`
-        );
+        categoryMap.get(userId)![category.name] = result.rows[0].id;
+        console.log(`✅ Category created: ${category.name} for user ${userId}`);
       } catch (error: any) {
         if (error.code === '23505') {
           console.log(
-            `⏭️ Category already exists: ${category.nombre} for user ${userId}`
+            `⏭️ Category already exists: ${category.name} for user ${userId}`
           );
           const existing = await pool.query(
-            'SELECT id FROM categorias WHERE usuario_id = $1 AND nombre = $2',
-            [userId, category.nombre]
+            'SELECT id FROM categories WHERE user_id = $1 AND name = $2',
+            [userId, category.name]
           );
-          categoryMap.get(userId)![category.nombre] = existing.rows[0].id;
+          categoryMap.get(userId)![category.name] = existing.rows[0].id;
         } else {
           throw error;
         }
@@ -265,22 +263,20 @@ const insertTags = async (
     for (const tag of sampleTags) {
       try {
         const result = await pool.query(
-          'INSERT INTO etiquetas (usuario_id, nombre, color) VALUES ($1, $2, $3) RETURNING id',
-          [userId, tag.nombre, tag.color]
+          'INSERT INTO tags (user_id, name, color) VALUES ($1, $2, $3) RETURNING id',
+          [userId, tag.name, tag.color]
         );
 
-        tagMap.get(userId)![tag.nombre] = result.rows[0].id;
-        console.log(`✅ Tag created: ${tag.nombre} for user ${userId}`);
+        tagMap.get(userId)![tag.name] = result.rows[0].id;
+        console.log(`✅ Tag created: ${tag.name} for user ${userId}`);
       } catch (error: any) {
         if (error.code === '23505') {
-          console.log(
-            `⏭️ Tag already exists: ${tag.nombre} for user ${userId}`
-          );
+          console.log(`⏭️ Tag already exists: ${tag.name} for user ${userId}`);
           const existing = await pool.query(
-            'SELECT id FROM etiquetas WHERE usuario_id = $1 AND nombre = $2',
-            [userId, tag.nombre]
+            'SELECT id FROM tags WHERE user_id = $1 AND name = $2',
+            [userId, tag.name]
           );
-          tagMap.get(userId)![tag.nombre] = existing.rows[0].id;
+          tagMap.get(userId)![tag.name] = existing.rows[0].id;
         } else {
           throw error;
         }
@@ -305,38 +301,38 @@ const insertTasks = async (
     for (const task of sampleTasks) {
       try {
         // Get category ID
-        const categoryId = categoryMap.get(userId)?.[task.categoria] || null;
+        const categoryId = categoryMap.get(userId)?.[task.category] || null;
 
         // Insert task
         const result = await pool.query(
-          `INSERT INTO tareas (usuario_id, categoria_id, titulo, descripcion, prioridad, fecha_vencimiento) 
+          `INSERT INTO tasks (user_id, category_id, title, description, priority, due_date) 
            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
           [
             userId,
             categoryId,
-            task.titulo,
-            task.descripcion,
-            task.prioridad,
-            task.fecha_vencimiento,
+            task.title,
+            task.description,
+            task.priority,
+            task.due_date,
           ]
         );
 
         const taskId = result.rows[0].id;
-        console.log(`✅ Task created: ${task.titulo} for user ${userId}`);
+        console.log(`✅ Task created: ${task.title} for user ${userId}`);
 
         // Insert task tags
-        for (const tagName of task.etiquetas) {
+        for (const tagName of task.tags) {
           const tagId = tagMap.get(userId)?.[tagName];
           if (tagId) {
             await pool.query(
-              'INSERT INTO tarea_etiquetas (tarea_id, etiqueta_id) VALUES ($1, $2)',
+              'INSERT INTO task_tags (task_id, tag_id) VALUES ($1, $2)',
               [taskId, tagId]
             );
             console.log(`🔗 Tag linked: ${tagName} to task ${taskId}`);
           }
         }
       } catch (error) {
-        console.error(`❌ Error creating task ${task.titulo}:`, error);
+        console.error(`❌ Error creating task ${task.title}:`, error);
       }
     }
   }
@@ -366,11 +362,11 @@ export const seedDatabase = async (): Promise<void> => {
     // Show summary
     const summary = await pool.query(`
       SELECT 
-        (SELECT COUNT(*) FROM usuarios) as users,
-        (SELECT COUNT(*) FROM categorias) as categories,
-        (SELECT COUNT(*) FROM etiquetas) as tags,
-        (SELECT COUNT(*) FROM tareas) as tasks,
-        (SELECT COUNT(*) FROM tarea_etiquetas) as task_tags
+        (SELECT COUNT(*) FROM users) as users,
+        (SELECT COUNT(*) FROM categories) as categories,
+        (SELECT COUNT(*) FROM tags) as tags,
+        (SELECT COUNT(*) FROM tasks) as tasks,
+        (SELECT COUNT(*) FROM task_tags) as task_tags
     `);
 
     console.log('📊 Database Summary:', summary.rows[0]);
@@ -389,11 +385,11 @@ export const clearDatabase = async (): Promise<void> => {
   try {
     console.log('🧹 Clearing database data...');
 
-    await pool.query('DELETE FROM tarea_etiquetas');
-    await pool.query('DELETE FROM tareas');
-    await pool.query('DELETE FROM etiquetas');
-    await pool.query('DELETE FROM categorias');
-    await pool.query('DELETE FROM usuarios');
+    await pool.query('DELETE FROM task_tags');
+    await pool.query('DELETE FROM tasks');
+    await pool.query('DELETE FROM tags');
+    await pool.query('DELETE FROM categories');
+    await pool.query('DELETE FROM users');
 
     console.log('✅ Database cleared');
   } catch (error) {

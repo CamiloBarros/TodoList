@@ -2,93 +2,85 @@ import { Router } from 'express';
 import * as tasksController from '../controllers/tasksController';
 import { authenticateToken } from '../middleware/auth';
 import {
-  validateCrearTarea,
-  validateActualizarTarea,
+  validateCreateTask,
+  validateUpdateTask,
   validateIdParam,
-  validateFiltrosTareas,
+  validateTaskFilters,
 } from '../middleware/validation';
 import { body } from 'express-validator';
 
 const router = Router();
 
-// Todas las rutas de tareas requieren autenticación
+// All task routes require authentication
 router.use(authenticateToken);
 
 /**
- * Validación para toggle completar tarea
+ * Validation for toggle complete task
  */
-const validateToggleCompletar = [
-  body('completada')
+const validateToggleComplete = [
+  body('completed')
     .isBoolean()
-    .withMessage('El campo completada debe ser true o false'),
+    .withMessage('The completed field must be true or false'),
 ];
 
 /**
- * @route   GET /api/tareas
- * @desc    Obtener todas las tareas del usuario con filtros y paginación
+ * @route   GET /api/tasks
+ * @desc    Get all user tasks with filters and pagination
  * @access  Private
- * @query   ?completada=true&categoria=1&prioridad=alta&fecha_vencimiento=2025-08-15
- *          &busqueda=texto&etiquetas=1,2,3&ordenar=creado_en&direccion=desc
+ * @query   ?completed=true&category=1&priority=high&due_date=2025-08-15
+ *          &search=text&tags=1,2,3&sort_by=created_at&sort_direction=desc
  *          &page=1&limit=20
  */
-router.get('/', ...validateFiltrosTareas, tasksController.obtenerTareas as any);
+router.get('/', ...validateTaskFilters, tasksController.getTasks as any);
 
 /**
- * @route   GET /api/tareas/estadisticas
- * @desc    Obtener estadísticas de las tareas del usuario
+ * @route   GET /api/tasks/statistics
+ * @desc    Get user task statistics
  * @access  Private
  */
-router.get('/estadisticas', tasksController.obtenerEstadisticasTareas as any);
+router.get('/statistics', tasksController.getTaskStatistics as any);
 
 /**
- * @route   GET /api/tareas/:id
- * @desc    Obtener una tarea específica por ID
+ * @route   GET /api/tasks/:id
+ * @desc    Get a specific task by ID
  * @access  Private
  */
-router.get(
-  '/:id',
-  ...validateIdParam,
-  tasksController.obtenerTareaPorId as any
-);
+router.get('/:id', ...validateIdParam, tasksController.getTaskById as any);
 
 /**
- * @route   POST /api/tareas
- * @desc    Crear una nueva tarea
+ * @route   POST /api/tasks
+ * @desc    Create a new task
  * @access  Private
- * @body    { titulo, descripcion?, categoria_id?, prioridad?, fecha_vencimiento?, etiquetas? }
+ * @body    { title, description?, category_id?, priority?, due_date?, tags? }
  */
-router.post('/', ...validateCrearTarea, tasksController.crearTarea as any);
+router.post('/', ...validateCreateTask, tasksController.createTask as any);
 
 /**
- * @route   PUT /api/tareas/:id
- * @desc    Actualizar una tarea completa
+ * @route   PUT /api/tasks/:id
+ * @desc    Update a complete task
  * @access  Private
- * @body    { titulo?, descripcion?, categoria_id?, prioridad?, fecha_vencimiento?, completada?, etiquetas? }
+ * @body    { title?, description?, category_id?, priority?, due_date?, completed?, tags? }
  */
-router.put(
-  '/:id',
-  ...validateActualizarTarea,
-  tasksController.actualizarTarea as any
-);
+router.put('/:id', ...validateUpdateTask, tasksController.updateTask as any);
 
 /**
- * @route   PATCH /api/tareas/:id/completar
- * @desc    Marcar una tarea como completada o pendiente
+ * @route   PATCH /api/tasks/:id/complete
+ * @desc    Mark a task as completed or pending
  * @access  Private
- * @body    { completada: boolean }
+ * @body    { completed: boolean }
  */
 router.patch(
-  '/:id/completar',
+  '/:id/complete',
   ...validateIdParam,
-  ...validateToggleCompletar,
-  tasksController.toggleCompletarTarea as any
+  ...validateToggleComplete,
+  tasksController.toggleCompleteTask as any
 );
 
 /**
- * @route   DELETE /api/tareas/:id
- * @desc    Eliminar una tarea
+ * @route   DELETE /api/tasks/:id
+ * @desc    Delete a task
  * @access  Private
  */
-router.delete('/:id', ...validateIdParam, tasksController.eliminarTarea as any);
+router.delete('/:id', ...validateIdParam, tasksController.deleteTask as any);
 
 export default router;

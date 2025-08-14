@@ -138,9 +138,9 @@ app.get('/api', (req: Request, res: Response): void => {
     endpoints: {
       health: '/health',
       auth: '/api/auth',
-      tareas: '/api/tareas',
-      categorias: '/api/categorias',
-      etiquetas: '/api/etiquetas',
+      tasks: '/api/tasks',
+      categories: '/api/categories',
+      tags: '/api/tags',
     },
     documentation: '/api/docs',
   });
@@ -148,9 +148,9 @@ app.get('/api', (req: Request, res: Response): void => {
 
 // API Routes will be added here in Phase 3
 app.use('/api/auth', authRoutes);
-app.use('/api/tareas', tasksRoutes);
-app.use('/api/categorias', categoriesRoutes);
-app.use('/api/etiquetas', tagsRoutes);
+app.use('/api/tasks', tasksRoutes);
+app.use('/api/categories', categoriesRoutes);
+app.use('/api/tags', tagsRoutes);
 
 /**
  * 404 Handler

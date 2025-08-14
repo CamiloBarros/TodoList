@@ -2,7 +2,7 @@ import { Router } from 'express';
 import * as authController from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import {
-  validateRegistro,
+  validateRegister,
   validateLogin,
   handleValidationErrors,
 } from '../middleware/validation';
@@ -11,109 +11,109 @@ import { body } from 'express-validator';
 const router = Router();
 
 /**
- * Validaciones específicas para cambio de password
+ * Specific validations for password change
  */
-const validateCambiarPassword = [
-  body('passwordActual')
+const validateChangePassword = [
+  body('currentPassword')
     .notEmpty()
-    .withMessage('La contraseña actual es requerida'),
-  body('passwordNueva')
+    .withMessage('Current password is required'),
+  body('newPassword')
     .isLength({ min: 8 })
-    .withMessage('La nueva contraseña debe tener al menos 8 caracteres')
+    .withMessage('New password must be at least 8 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage(
-      'La nueva contraseña debe contener al menos una minúscula, una mayúscula y un número'
+      'New password must contain at least one lowercase, one uppercase and one number'
     ),
   handleValidationErrors,
 ];
 
 /**
- * Validaciones para actualizar perfil
+ * Validations for profile update
  */
-const validateActualizarPerfil = [
-  body('nombre')
+const validateUpdateProfile = [
+  body('name')
     .optional()
     .isLength({ min: 2, max: 50 })
-    .withMessage('El nombre debe tener entre 2 y 50 caracteres')
+    .withMessage('Name must be between 2 and 50 characters')
     .trim(),
   body('email')
     .optional()
     .isEmail()
-    .withMessage('Debe ser un email válido')
+    .withMessage('Must be a valid email')
     .normalizeEmail(),
   handleValidationErrors,
 ];
 
 /**
- * @route   POST /api/auth/registro
- * @desc    Registrar nuevo usuario
+ * @route   POST /api/auth/register
+ * @desc    Register new user
  * @access  Public
  */
-router.post('/registro', validateRegistro, authController.registro);
+router.post('/register', validateRegister, authController.register);
 
 /**
  * @route   POST /api/auth/login
- * @desc    Autenticar usuario y obtener token
+ * @desc    Authenticate user and get token
  * @access  Public
  */
 router.post('/login', validateLogin, authController.login);
 
 /**
- * @route   GET /api/auth/perfil
- * @desc    Obtener perfil del usuario autenticado
+ * @route   GET /api/auth/profile
+ * @desc    Get authenticated user profile
  * @access  Private
  */
-router.get('/perfil', authenticateToken, authController.perfil as any);
+router.get('/profile', authenticateToken, authController.profile as any);
 
 /**
- * @route   PUT /api/auth/perfil
- * @desc    Actualizar perfil del usuario autenticado
+ * @route   PUT /api/auth/profile
+ * @desc    Update authenticated user profile
  * @access  Private
  */
 router.put(
-  '/perfil',
+  '/profile',
   authenticateToken,
-  validateActualizarPerfil,
-  authController.actualizarPerfil as any
+  validateUpdateProfile,
+  authController.updateProfile as any
 );
 
 /**
- * @route   POST /api/auth/cambiar-password
- * @desc    Cambiar contraseña del usuario autenticado
+ * @route   POST /api/auth/change-password
+ * @desc    Change authenticated user password
  * @access  Private
  */
 router.post(
-  '/cambiar-password',
+  '/change-password',
   authenticateToken,
-  validateCambiarPassword,
-  authController.cambiarPassword as any
+  validateChangePassword,
+  authController.changePassword as any
 );
 
 /**
- * @route   DELETE /api/auth/cuenta
- * @desc    Desactivar cuenta del usuario autenticado
+ * @route   DELETE /api/auth/account
+ * @desc    Deactivate authenticated user account
  * @access  Private
  */
 router.delete(
-  '/cuenta',
+  '/account',
   authenticateToken,
-  authController.desactivarCuenta as any
+  authController.deactivateAccount as any
 );
 
 /**
- * @route   POST /api/auth/verificar-token
- * @desc    Verificar si el token JWT es válido
+ * @route   POST /api/auth/verify-token
+ * @desc    Verify if JWT token is valid
  * @access  Private
  */
 router.post(
-  '/verificar-token',
+  '/verify-token',
   authenticateToken,
-  authController.verificarToken as any
+  authController.verifyToken as any
 );
 
 /**
  * @route   POST /api/auth/logout
- * @desc    Cerrar sesión del usuario
+ * @desc    Log out user
  * @access  Private
  */
 router.post('/logout', authenticateToken, authController.logout as any);

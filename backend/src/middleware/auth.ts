@@ -5,8 +5,8 @@ import { JWTPayload, AuthenticatedRequest, PublicUser } from '../types';
 import appConfig from '../config/env';
 
 /**
- * Middleware de autenticación JWT
- * Verifica el token JWT y adjunta la información del User a la request
+ * JWT authentication middleware
+ * Verifies JWT token and attaches user information to the request
  */
 export const authenticateToken = async (
   req: Request,
@@ -14,7 +14,7 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Obtener el token del header Authorization
+    // Get token from Authorization header
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -22,7 +22,7 @@ export const authenticateToken = async (
       res.status(401).json({
         success: false,
         error: {
-          message: 'Token de acceso requerido',
+          message: 'Access token required',
           type: 'AUTHENTICATION_ERROR',
           statusCode: 401,
           timestamp: new Date().toISOString(),
@@ -31,12 +31,12 @@ export const authenticateToken = async (
       return;
     }
 
-    // Verificar el token JWT
+    // Verify JWT token
     const decoded = jwt.verify(token, appConfig.jwt.secret) as JWTPayload;
 
-    // Verificar que el User existe y está activo
+    // Verify that user exists and is active
     const result = await query(
-      'SELECT id, email, nombre, creado_en, actualizado_en FROM usuarios WHERE id = $1 AND activo = true',
+      'SELECT id, email, name, created_at, updated_at FROM users WHERE id = $1 AND active = true',
       [decoded.id]
     );
 
@@ -44,7 +44,7 @@ export const authenticateToken = async (
       res.status(401).json({
         success: false,
         error: {
-          message: 'User no encontrado o inactivo',
+          message: 'User not found or inactive',
           type: 'AUTHENTICATION_ERROR',
           statusCode: 401,
           timestamp: new Date().toISOString(),
@@ -53,13 +53,13 @@ export const authenticateToken = async (
       return;
     }
 
-    // Attach user information to request
+    // Attach user information to the request
     const user: PublicUser = {
       id: result.rows[0].id,
       email: result.rows[0].email,
-      name: result.rows[0].nombre,
-      created_at: result.rows[0].creado_en,
-      updated_at: result.rows[0].actualizado_en,
+      name: result.rows[0].name,
+      created_at: result.rows[0].created_at,
+      updated_at: result.rows[0].updated_at,
     };
 
     (req as AuthenticatedRequest).user = user;
@@ -69,7 +69,7 @@ export const authenticateToken = async (
       res.status(401).json({
         success: false,
         error: {
-          message: 'Token expirado',
+          message: 'Token expired',
           type: 'TOKEN_EXPIRED',
           statusCode: 401,
           timestamp: new Date().toISOString(),
@@ -82,7 +82,7 @@ export const authenticateToken = async (
       res.status(401).json({
         success: false,
         error: {
-          message: 'Token inválido',
+          message: 'Invalid token',
           type: 'INVALID_TOKEN',
           statusCode: 401,
           timestamp: new Date().toISOString(),
@@ -91,11 +91,11 @@ export const authenticateToken = async (
       return;
     }
 
-    console.error('Error en autenticación:', error);
+    console.error('Error in authentication:', error);
     res.status(500).json({
       success: false,
       error: {
-        message: 'Error interno del servidor',
+        message: 'Internal server error',
         type: 'INTERNAL_SERVER_ERROR',
         statusCode: 500,
         timestamp: new Date().toISOString(),
@@ -105,8 +105,8 @@ export const authenticateToken = async (
 };
 
 /**
- * Middleware opcional de autenticación
- * No requiere token, pero si está presente lo valida
+ * Optional authentication middleware
+ * Does not require token, but validates it if present
  */
 export const optionalAuth = async (
   req: Request,
@@ -122,11 +122,11 @@ export const optionalAuth = async (
       return;
     }
 
-    // Si hay token, validarlo
+    // If there's a token, validate it
     const decoded = jwt.verify(token, appConfig.jwt.secret) as JWTPayload;
 
     const result = await query(
-      'SELECT id, email, nombre, creado_en, actualizado_en FROM usuarios WHERE id = $1 AND activo = true',
+      'SELECT id, email, name, created_at, updated_at FROM users WHERE id = $1 AND active = true',
       [decoded.id]
     );
 
@@ -134,9 +134,9 @@ export const optionalAuth = async (
       const user: PublicUser = {
         id: result.rows[0].id,
         email: result.rows[0].email,
-        name: result.rows[0].nombre,
-        created_at: result.rows[0].creado_en,
-        updated_at: result.rows[0].actualizado_en,
+        name: result.rows[0].name,
+        created_at: result.rows[0].created_at,
+        updated_at: result.rows[0].updated_at,
       };
 
       (req as AuthenticatedRequest).user = user;
@@ -144,18 +144,18 @@ export const optionalAuth = async (
 
     next();
   } catch (error) {
-    // En autenticación opcional, los errores no detienen la request
+    // In optional authentication, errors don't stop the request
     next();
   }
 };
 
 /**
- * Genera un token JWT para un User
+ * Generates a JWT token for a user
  */
-export const generateToken = (User: PublicUser): string => {
+export const generateToken = (user: PublicUser): string => {
   const payload: JWTPayload = {
-    id: User.id,
-    email: User.email,
+    id: user.id,
+    email: user.email,
     iss: appConfig.jwt.issuer,
   };
 
@@ -165,7 +165,7 @@ export const generateToken = (User: PublicUser): string => {
 };
 
 /**
- * Verifica si un token es válido sin hacer consulta a la base de datos
+ * Verifies if a token is valid without making a database query
  */
 export const verifyToken = (token: string): JWTPayload | null => {
   try {

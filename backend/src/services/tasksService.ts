@@ -1,545 +1,549 @@
 ﻿import { query, transaction } from '../config/database';
-import { 
-  Task, 
-  TaskCreation, 
+import {
+  Task,
+  TaskCreation,
   TaskUpdate,
   TaskFilters,
-  ResultadoPaginado,
+  PaginatedResult,
   ApiResponse,
-  Prioridad 
+  Priority,
 } from '../types';
 import appConfig from '../config/env';
 
 /**
- * Servicio de Tareas
- * Maneja todas las operaciones CRUD y de consulta para las tareas
+ * Tasks Service
+ * Handles all CRUD and query operations for tasks
  */
 
 /**
- * Obtiene todas las tareas del User con filtros y paginación
+ * Gets all user tasks with filters and pagination
  */
-export const obtenerTareas = async (
-  usuarioId: number,
-  filtros: TaskFilters = {}
-): Promise<ApiResponse<ResultadoPaginado<Task>>> => {
+export const getTasks = async (
+  userId: number,
+  filters: TaskFilters = {}
+): Promise<ApiResponse<PaginatedResult<Task>>> => {
   try {
     const {
-      completada,
-      Category,
-      prioridad,
-      fecha_vencimiento,
-      busqueda,
-      etiquetas,
-      ordenar = 'creado_en',
-      direccion = 'desc',
+      completed,
+      category,
+      priority,
+      due_date,
+      search,
+      tags,
+      
+      sort_by = 'created_at',
+      sort_direction = 'desc',
       page = 1,
-      limit = appConfig.pagination.defaultPageSize
-    } = filtros;
+      limit = appConfig.pagination.defaultPageSize,
+    } = filters;
 
-    // Validar límite de paginación
-    const limiteFinal = Math.min(limit, appConfig.pagination.maxPageSize);
-    const offset = (page - 1) * limiteFinal;
+    // Validate pagination limit
+    const finalLimit = Math.min(limit, appConfig.pagination.maxPageSize);
+    const offset = (page - 1) * finalLimit;
 
-    // Construir query base con JOIN para categorías
+    // Build base query with JOIN for categories
     let queryText = `
       SELECT 
-        t.id, t.usuario_id, t.categoria_id, t.titulo, t.descripcion,
-        t.completada, t.prioridad, t.fecha_vencimiento, t.completada_en,
-        t.creado_en, t.actualizado_en,
-        c.nombre as categoria_nombre, c.color as categoria_color,
+        t.id, t.user_id, t.category_id, t.title, t.description,
+        t.completed, t.priority, t.due_date, t.completed_at,
+        t.created_at, t.updated_at,
+        c.name as category_name, c.color as category_color,
         COALESCE(
           JSON_AGG(
             CASE WHEN e.id IS NOT NULL THEN
-              JSON_BUILD_OBJECT('id', e.id, 'nombre', e.nombre, 'color', e.color)
+              JSON_BUILD_OBJECT('id', e.id, 'name', e.name, 'color', e.color)
             END
           ) FILTER (WHERE e.id IS NOT NULL), '[]'
-        ) as etiquetas
-      FROM tareas t
-      LEFT JOIN categorias c ON t.categoria_id = c.id
-      LEFT JOIN tarea_etiquetas te ON t.id = te.tarea_id
-      LEFT JOIN etiquetas e ON te.etiqueta_id = e.id
-      WHERE t.usuario_id = $1
+        ) as tags
+      FROM tasks t
+      LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN task_tags te ON t.id = te.task_id
+      LEFT JOIN tags e ON te.tag_id = e.id
+      WHERE t.user_id = $1
     `;
 
-    const params: any[] = [usuarioId];
+    const params: any[] = [userId];
     let paramCounter = 2;
 
-    // Aplicar filtros
-    if (completada !== undefined) {
-      queryText += ` AND t.completada = $${paramCounter}`;
-      params.push(completada);
+    // Apply filters
+    if (completed !== undefined) {
+      queryText += ` AND t.completed = $${paramCounter}`;
+      params.push(completed);
       paramCounter++;
     }
 
-    if (Category) {
-      queryText += ` AND t.categoria_id = $${paramCounter}`;
-      params.push(Category);
+    if (category) {
+      queryText += ` AND t.category_id = $${paramCounter}`;
+      params.push(category);
       paramCounter++;
     }
 
-    if (prioridad) {
-      queryText += ` AND t.prioridad = $${paramCounter}`;
-      params.push(prioridad);
+    if (priority) {
+      queryText += ` AND t.priority = $${paramCounter}`;
+      params.push(priority);
       paramCounter++;
     }
 
-    if (fecha_vencimiento) {
-      queryText += ` AND DATE(t.fecha_vencimiento) = DATE($${paramCounter})`;
-      params.push(fecha_vencimiento);
+    if (due_date) {
+      queryText += ` AND DATE(t.due_date) = DATE($${paramCounter})`;
+      params.push(due_date);
       paramCounter++;
     }
 
-    if (busqueda) {
-      queryText += ` AND (t.titulo ILIKE $${paramCounter} OR t.descripcion ILIKE $${paramCounter})`;
-      params.push(`%${busqueda}%`);
+    if (search) {
+      queryText += ` AND (t.title ILIKE $${paramCounter} OR t.description ILIKE $${paramCounter})`;
+      params.push(`%${search}%`);
       paramCounter++;
     }
 
-    if (etiquetas) {
-      const etiquetaIds = etiquetas.split(',').map(id => parseInt(id.trim()));
+    if (tags) {
+      const tagIds = tags.split(',').map((id) => parseInt(id.trim()));
       queryText += ` AND t.id IN (
-        SELECT DISTINCT te2.tarea_id 
-        FROM tarea_etiquetas te2 
-        WHERE te2.etiqueta_id = ANY($${paramCounter})
+        SELECT DISTINCT te2.task_id 
+        FROM task_tags te2 
+        WHERE te2.tag_id = ANY($${paramCounter})
       )`;
-      params.push(etiquetaIds);
+      params.push(tagIds);
       paramCounter++;
     }
 
-    // Agrupar por Task
-    queryText += ` GROUP BY t.id, c.nombre, c.color`;
+    // Group by task
+    queryText += ` GROUP BY t.id, c.name, c.color`;
 
-    // Ordenamiento
-    const validarOrden = ['creado_en', 'fecha_vencimiento', 'prioridad', 'titulo'];
-    const ordenValido = validarOrden.includes(ordenar) ? ordenar : 'creado_en';
-    const direccionValida = direccion === 'asc' ? 'ASC' : 'DESC';
-    
-    // Ordenamiento especial para prioridad
-    if (ordenValido === 'prioridad') {
+    // Sorting
+    const validSort = ['created_at', 'due_date', 'priority', 'title'];
+    const validSortField = validSort.includes(sort_by) ? sort_by : 'created_at';
+    const validDirection = sort_direction === 'asc' ? 'ASC' : 'DESC';
+
+    // Special sorting for priority
+    if (validSortField === 'priority') {
       queryText += ` ORDER BY 
-        CASE t.prioridad 
-          WHEN 'alta' THEN 3 
-          WHEN 'media' THEN 2 
-          WHEN 'baja' THEN 1 
-        END ${direccionValida}`;
+        CASE t.priority 
+          WHEN 'high' THEN 3 
+          WHEN 'medium' THEN 2 
+          WHEN 'low' THEN 1 
+        END ${validDirection}`;
     } else {
-      queryText += ` ORDER BY t.${ordenValido} ${direccionValida}`;
+      queryText += ` ORDER BY t.${validSortField} ${validDirection}`;
     }
 
-    // Paginación
+    // Pagination
     queryText += ` LIMIT $${paramCounter} OFFSET $${paramCounter + 1}`;
-    params.push(limiteFinal, offset);
+    params.push(finalLimit, offset);
 
-    // Ejecutar query principal
-    const resultado = await query(queryText, params);
+    // Execute main query
+    const result = await query(queryText, params);
 
-    // Query para contar total
+    // Query to count total
     let countQuery = `
       SELECT COUNT(DISTINCT t.id) as total
-      FROM tareas t
-      LEFT JOIN categorias c ON t.categoria_id = c.id
-      LEFT JOIN tarea_etiquetas te ON t.id = te.tarea_id
-      LEFT JOIN etiquetas e ON te.etiqueta_id = e.id
-      WHERE t.usuario_id = $1
+      FROM tasks t
+      LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN task_tags te ON t.id = te.task_id
+      LEFT JOIN tags e ON te.tag_id = e.id
+      WHERE t.user_id = $1
     `;
 
-    // Aplicar los mismos filtros para el conteo
-    let countParams: any[] = [usuarioId];
+    // Apply the same filters for counting
+    let countParams: any[] = [userId];
     let countParamCounter = 2;
 
-    if (completada !== undefined) {
-      countQuery += ` AND t.completada = $${countParamCounter}`;
-      countParams.push(completada);
+    if (completed !== undefined) {
+      countQuery += ` AND t.completed = $${countParamCounter}`;
+      countParams.push(completed);
       countParamCounter++;
     }
 
-    if (Category) {
-      countQuery += ` AND t.categoria_id = $${countParamCounter}`;
-      countParams.push(Category);
+    if (category) {
+      countQuery += ` AND t.category_id = $${countParamCounter}`;
+      countParams.push(category);
       countParamCounter++;
     }
 
-    if (prioridad) {
-      countQuery += ` AND t.prioridad = $${countParamCounter}`;
-      countParams.push(prioridad);
+    if (priority) {
+      countQuery += ` AND t.priority = $${countParamCounter}`;
+      countParams.push(priority);
       countParamCounter++;
     }
 
-    if (fecha_vencimiento) {
-      countQuery += ` AND DATE(t.fecha_vencimiento) = DATE($${countParamCounter})`;
-      countParams.push(fecha_vencimiento);
+    if (due_date) {
+      countQuery += ` AND DATE(t.due_date) = DATE($${countParamCounter})`;
+      countParams.push(due_date);
       countParamCounter++;
     }
 
-    if (busqueda) {
-      countQuery += ` AND (t.titulo ILIKE $${countParamCounter} OR t.descripcion ILIKE $${countParamCounter})`;
-      countParams.push(`%${busqueda}%`);
+    if (search) {
+      countQuery += ` AND (t.title ILIKE $${countParamCounter} OR t.description ILIKE $${countParamCounter})`;
+      countParams.push(`%${search}%`);
       countParamCounter++;
     }
 
-    if (etiquetas) {
-      const etiquetaIds = etiquetas.split(',').map(id => parseInt(id.trim()));
+    if (tags) {
+      const tagIds = tags.split(',').map((id) => parseInt(id.trim()));
       countQuery += ` AND t.id IN (
-        SELECT DISTINCT te2.tarea_id 
-        FROM tarea_etiquetas te2 
-        WHERE te2.etiqueta_id = ANY($${countParamCounter})
+        SELECT DISTINCT te2.task_id 
+        FROM task_tags te2 
+        WHERE te2.tag_id = ANY($${countParamCounter})
       )`;
-      countParams.push(etiquetaIds);
+      countParams.push(tagIds);
       countParamCounter++;
     }
 
     const countResult = await query(countQuery, countParams);
     const total = parseInt(countResult.rows[0].total);
 
-    // Procesar resultados
-    const tareas: Task[] = resultado.rows.map(row => ({
+    // Process results
+    const tasks: Task[] = result.rows.map((row) => ({
       id: row.id,
-      usuario_id: row.usuario_id,
-      categoria_id: row.categoria_id,
-      titulo: row.titulo,
-      descripcion: row.descripcion,
-      completada: row.completada,
-      prioridad: row.prioridad,
-      fecha_vencimiento: row.fecha_vencimiento,
-      completada_en: row.completada_en,
-      creado_en: row.creado_en,
-      actualizado_en: row.actualizado_en,
-      Category: row.categoria_id ? {
-        id: row.categoria_id,
-        usuario_id: row.usuario_id,
-        nombre: row.categoria_nombre,
-        color: row.categoria_color,
-        creado_en: row.creado_en,
-        actualizado_en: row.actualizado_en,
-      } : undefined,
-      etiquetas: row.etiquetas || []
+      user_id: row.user_id,
+      category_id: row.category_id,
+      title: row.title,
+      description: row.description,
+      completed: row.completed,
+      priority: row.priority,
+      due_date: row.due_date,
+      completed_at: row.completed_at,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      category: row.category_id
+        ? {
+            id: row.category_id,
+            user_id: row.user_id,
+            name: row.category_name,
+            color: row.category_color,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+          }
+        : undefined,
+      tags: row.tags || [],
     }));
 
-    const totalPages = Math.ceil(total / limiteFinal);
+    const totalPages = Math.ceil(total / finalLimit);
 
     return {
       success: true,
       data: {
-        data: tareas,
+        data: tasks,
         pagination: {
           page,
-          limit: limiteFinal,
+          limit: finalLimit,
           total,
           totalPages,
           hasNext: page < totalPages,
           hasPrev: page > 1,
-        }
-      }
+        },
+      },
     };
   } catch (error) {
-    console.error('Error obteniendo tareas:', error);
+    console.error('Error getting tasks:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Obtiene una Task específica por ID
+ * Gets a specific task by ID
  */
-export const obtenerTareaPorId = async (
-  tareaId: number,
-  usuarioId: number
+export const getTaskById = async (
+  taskId: number,
+  userId: number
 ): Promise<ApiResponse<Task>> => {
   try {
     const queryText = `
       SELECT 
-        t.id, t.usuario_id, t.categoria_id, t.titulo, t.descripcion,
-        t.completada, t.prioridad, t.fecha_vencimiento, t.completada_en,
-        t.creado_en, t.actualizado_en,
-        c.nombre as categoria_nombre, c.color as categoria_color,
+        t.id, t.user_id, t.category_id, t.title, t.description,
+        t.completed, t.priority, t.due_date, t.completed_at,
+        t.created_at, t.updated_at,
+        c.name as category_name, c.color as category_color,
         COALESCE(
           JSON_AGG(
             CASE WHEN e.id IS NOT NULL THEN
-              JSON_BUILD_OBJECT('id', e.id, 'nombre', e.nombre, 'color', e.color)
+              JSON_BUILD_OBJECT('id', e.id, 'name', e.name, 'color', e.color)
             END
           ) FILTER (WHERE e.id IS NOT NULL), '[]'
-        ) as etiquetas
-      FROM tareas t
-      LEFT JOIN categorias c ON t.categoria_id = c.id
-      LEFT JOIN tarea_etiquetas te ON t.id = te.tarea_id
-      LEFT JOIN etiquetas e ON te.etiqueta_id = e.id
-      WHERE t.id = $1 AND t.usuario_id = $2
-      GROUP BY t.id, c.nombre, c.color
+        ) as tags
+      FROM tasks t
+      LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN task_tags te ON t.id = te.task_id
+      LEFT JOIN tags e ON te.tag_id = e.id
+      WHERE t.id = $1 AND t.user_id = $2
+      GROUP BY t.id, c.name, c.color
     `;
 
-    const resultado = await query(queryText, [tareaId, usuarioId]);
+    const result = await query(queryText, [taskId, userId]);
 
-    if (resultado.rows.length === 0) {
+    if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Task no encontrada',
+        error: 'Task not found',
       };
     }
 
-    const row = resultado.rows[0];
-    const Task: Task = {
+    const row = result.rows[0];
+    const task: Task = {
       id: row.id,
-      usuario_id: row.usuario_id,
-      categoria_id: row.categoria_id,
-      titulo: row.titulo,
-      descripcion: row.descripcion,
-      completada: row.completada,
-      prioridad: row.prioridad,
-      fecha_vencimiento: row.fecha_vencimiento,
-      completada_en: row.completada_en,
-      creado_en: row.creado_en,
-      actualizado_en: row.actualizado_en,
-      Category: row.categoria_id ? {
-        id: row.categoria_id,
-        usuario_id: row.usuario_id,
-        nombre: row.categoria_nombre,
-        color: row.categoria_color,
-        creado_en: row.creado_en,
-        actualizado_en: row.actualizado_en,
-      } : undefined,
-      etiquetas: row.etiquetas || []
+      user_id: row.user_id,
+      category_id: row.category_id,
+      title: row.title,
+      description: row.description,
+      completed: row.completed,
+      priority: row.priority,
+      due_date: row.due_date,
+      completed_at: row.completed_at,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      category: row.category_id
+        ? {
+            id: row.category_id,
+            user_id: row.user_id,
+            name: row.category_name,
+            color: row.category_color,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+          }
+        : undefined,
+      tags: row.tags || [],
     };
 
     return {
       success: true,
-      data: Task,
+      data: task,
     };
   } catch (error) {
-    console.error('Error obteniendo Task por ID:', error);
+    console.error('Error getting task by ID:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Crea una nueva Task
+ * Creates a new task
  */
-export const crearTarea = async (
-  usuarioId: number,
-  datosTarea: TaskCreation
+export const createTask = async (
+  userId: number,
+  taskData: TaskCreation
 ): Promise<ApiResponse<Task>> => {
   try {
-    // Validar que la categoría pertenezca al User (si se especifica)
-    if (datosTarea.categoria_id) {
-      const categoriaResult = await query(
-        'SELECT id FROM categorias WHERE id = $1 AND usuario_id = $2',
-        [datosTarea.categoria_id, usuarioId]
+    // Validate that category belongs to user (if specified)
+    if (taskData.category_id) {
+      const categoryResult = await query(
+        'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+        [taskData.category_id, userId]
       );
 
-      if (categoriaResult.rows.length === 0) {
+      if (categoryResult.rows.length === 0) {
         return {
           success: false,
-          error: 'Categoría no encontrada o no pertenece al User',
+          error: 'Category not found or does not belong to user',
         };
       }
     }
 
-    // Validar que las etiquetas pertenezcan al User (si se especifican)
-    if (datosTarea.etiquetas && datosTarea.etiquetas.length > 0) {
-      const etiquetasResult = await query(
-        'SELECT id FROM etiquetas WHERE id = ANY($1) AND usuario_id = $2',
-        [datosTarea.etiquetas, usuarioId]
+    // Validate that tags belong to user (if specified)
+    if (taskData.tags && taskData.tags.length > 0) {
+      const tagsResult = await query(
+        'SELECT id FROM tags WHERE id = ANY($1) AND user_id = $2',
+        [taskData.tags, userId]
       );
 
-      if (etiquetasResult.rows.length !== datosTarea.etiquetas.length) {
+      if (tagsResult.rows.length !== taskData.tags.length) {
         return {
           success: false,
-          error: 'Una o más etiquetas no pertenecen al User',
+          error: 'One or more tags do not belong to user',
         };
       }
     }
 
-    const resultado = await transaction(async (client) => {
-      // Crear la Task
+    const result = await transaction(async (client) => {
+      // Create the task
       const insertResult = await client.query(
-        `INSERT INTO tareas (
-          usuario_id, categoria_id, titulo, descripcion, prioridad, fecha_vencimiento
+        `INSERT INTO tasks (
+          user_id, category_id, title, description, priority, due_date
         ) VALUES ($1, $2, $3, $4, $5, $6) 
         RETURNING *`,
         [
-          usuarioId,
-          datosTarea.categoria_id || null,
-          datosTarea.titulo,
-          datosTarea.descripcion || null,
-          datosTarea.prioridad || 'media',
-          datosTarea.fecha_vencimiento || null
+          userId,
+          taskData.category_id || null,
+          taskData.title,
+          taskData.description || null,
+          taskData.priority || 'medium',
+          taskData.due_date || null,
         ]
       );
 
-      const nuevaTarea = insertResult.rows[0];
+      const newTask = insertResult.rows[0];
 
-      // Asociar etiquetas si se especificaron
-      if (datosTarea.etiquetas && datosTarea.etiquetas.length > 0) {
-        for (const etiquetaId of datosTarea.etiquetas) {
+      // Associate tags if specified
+      if (taskData.tags && taskData.tags.length > 0) {
+        for (const tagId of taskData.tags) {
           await client.query(
-            'INSERT INTO tarea_etiquetas (tarea_id, etiqueta_id) VALUES ($1, $2)',
-            [nuevaTarea.id, etiquetaId]
+            'INSERT INTO task_tags (task_id, tag_id) VALUES ($1, $2)',
+            [newTask.id, tagId]
           );
         }
       }
 
-      return nuevaTarea;
+      return newTask;
     });
 
-    // Obtener la Task completa con relaciones
-    const tareaCompleta = await obtenerTareaPorId(resultado.id, usuarioId);
+    // Get the complete task with relations
+    const completeTask = await getTaskById(result.id, userId);
 
-    if (tareaCompleta.success) {
+    if (completeTask.success) {
       return {
         success: true,
-        data: tareaCompleta.data!,
-        message: 'Task creada exitosamente',
+        data: completeTask.data!,
+        message: 'Task created successfully',
       };
     } else {
-      return tareaCompleta;
+      return completeTask;
     }
   } catch (error) {
-    console.error('Error creando Task:', error);
+    console.error('Error creating task:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Actualiza una Task existente
+ * Updates an existing task
  */
-export const actualizarTarea = async (
-  tareaId: number,
-  usuarioId: number,
-  datosActualizacion: TaskUpdate
+export const updateTask = async (
+  taskId: number,
+  userId: number,
+  updateData: TaskUpdate
 ): Promise<ApiResponse<Task>> => {
   try {
-    // Verificar que la Task existe y pertenece al User
-    const tareaExiste = await query(
-      'SELECT id FROM tareas WHERE id = $1 AND usuario_id = $2',
-      [tareaId, usuarioId]
+    // Check that task exists and belongs to user
+    const taskExists = await query(
+      'SELECT id FROM tasks WHERE id = $1 AND user_id = $2',
+      [taskId, userId]
     );
 
-    if (tareaExiste.rows.length === 0) {
+    if (taskExists.rows.length === 0) {
       return {
         success: false,
-        error: 'Task no encontrada',
+        error: 'Task not found',
       };
     }
 
-    // Validar categoría si se especifica
-    if (datosActualizacion.categoria_id) {
-      const categoriaResult = await query(
-        'SELECT id FROM categorias WHERE id = $1 AND usuario_id = $2',
-        [datosActualizacion.categoria_id, usuarioId]
+    // Validate category if specified
+    if (updateData.category_id) {
+      const categoryResult = await query(
+        'SELECT id FROM categories WHERE id = $1 AND user_id = $2',
+        [updateData.category_id, userId]
       );
 
-      if (categoriaResult.rows.length === 0) {
+      if (categoryResult.rows.length === 0) {
         return {
           success: false,
-          error: 'Categoría no encontrada o no pertenece al User',
+          error: 'Category not found or does not belong to user',
         };
       }
     }
 
-    // Validar etiquetas si se especifican
-    if (datosActualizacion.etiquetas && datosActualizacion.etiquetas.length > 0) {
-      const etiquetasResult = await query(
-        'SELECT id FROM etiquetas WHERE id = ANY($1) AND usuario_id = $2',
-        [datosActualizacion.etiquetas, usuarioId]
+    // Validate tags if specified
+    if (updateData.tags && updateData.tags.length > 0) {
+      const tagsResult = await query(
+        'SELECT id FROM tags WHERE id = ANY($1) AND user_id = $2',
+        [updateData.tags, userId]
       );
 
-      if (etiquetasResult.rows.length !== datosActualizacion.etiquetas.length) {
+      if (tagsResult.rows.length !== updateData.tags.length) {
         return {
           success: false,
-          error: 'Una o más etiquetas no pertenecen al User',
+          error: 'One or more tags do not belong to user',
         };
       }
     }
 
-    const resultado = await transaction(async (client) => {
-      // Construir query de actualización dinámicamente
-      const camposActualizar: string[] = [];
-      const valores: any[] = [];
-      let contador = 1;
+    const result = await transaction(async (client) => {
+      // Build update query dynamically
+      const fieldsToUpdate: string[] = [];
+      const values: any[] = [];
+      let counter = 1;
 
-      if (datosActualizacion.titulo !== undefined) {
-        camposActualizar.push(`titulo = $${contador}`);
-        valores.push(datosActualizacion.titulo);
-        contador++;
+      if (updateData.title !== undefined) {
+        fieldsToUpdate.push(`title = $${counter}`);
+        values.push(updateData.title);
+        counter++;
       }
 
-      if (datosActualizacion.descripcion !== undefined) {
-        camposActualizar.push(`descripcion = $${contador}`);
-        valores.push(datosActualizacion.descripcion);
-        contador++;
+      if (updateData.description !== undefined) {
+        fieldsToUpdate.push(`description = $${counter}`);
+        values.push(updateData.description);
+        counter++;
       }
 
-      if (datosActualizacion.categoria_id !== undefined) {
-        camposActualizar.push(`categoria_id = $${contador}`);
-        valores.push(datosActualizacion.categoria_id);
-        contador++;
+      if (updateData.category_id !== undefined) {
+        fieldsToUpdate.push(`category_id = $${counter}`);
+        values.push(updateData.category_id);
+        counter++;
       }
 
-      if (datosActualizacion.prioridad !== undefined) {
-        camposActualizar.push(`prioridad = $${contador}`);
-        valores.push(datosActualizacion.prioridad);
-        contador++;
+      if (updateData.priority !== undefined) {
+        fieldsToUpdate.push(`priority = $${counter}`);
+        values.push(updateData.priority);
+        counter++;
       }
 
-      if (datosActualizacion.fecha_vencimiento !== undefined) {
-        camposActualizar.push(`fecha_vencimiento = $${contador}`);
-        valores.push(datosActualizacion.fecha_vencimiento);
-        contador++;
+      if (updateData.due_date !== undefined) {
+        fieldsToUpdate.push(`due_date = $${counter}`);
+        values.push(updateData.due_date);
+        counter++;
       }
 
-      if (datosActualizacion.completada !== undefined) {
-        camposActualizar.push(`completada = $${contador}`);
-        valores.push(datosActualizacion.completada);
-        contador++;
+      if (updateData.completed !== undefined) {
+        fieldsToUpdate.push(`completed = $${counter}`);
+        values.push(updateData.completed);
+        counter++;
 
-        // Si se marca como completada, establecer fecha de completado
-        if (datosActualizacion.completada) {
-          camposActualizar.push(`completada_en = CURRENT_TIMESTAMP`);
+        // If marked as completed, set completion date
+        if (updateData.completed) {
+          fieldsToUpdate.push(`completed_at = CURRENT_TIMESTAMP`);
         } else {
-          camposActualizar.push(`completada_en = NULL`);
+          fieldsToUpdate.push(`completed_at = NULL`);
         }
       }
 
-      if (camposActualizar.length === 0 && !datosActualizacion.etiquetas) {
-        throw new Error('No hay datos para actualizar');
+      if (fieldsToUpdate.length === 0 && !updateData.tags) {
+        throw new Error('No data to update');
       }
 
-      // Actualizar la Task si hay campos para actualizar
-      if (camposActualizar.length > 0) {
-        camposActualizar.push(`actualizado_en = CURRENT_TIMESTAMP`);
-        valores.push(tareaId, usuarioId);
+      // Update task if there are fields to update
+      if (fieldsToUpdate.length > 0) {
+        fieldsToUpdate.push(`updated_at = CURRENT_TIMESTAMP`);
+        values.push(taskId, userId);
 
         const queryText = `
-          UPDATE tareas 
-          SET ${camposActualizar.join(', ')} 
-          WHERE id = $${valores.length - 1} AND usuario_id = $${valores.length}
+          UPDATE tasks 
+          SET ${fieldsToUpdate.join(', ')} 
+          WHERE id = $${values.length - 1} AND user_id = $${values.length}
           RETURNING *
         `;
 
-        await client.query(queryText, valores);
+        await client.query(queryText, values);
       }
 
-      // Actualizar etiquetas si se especificaron
-      if (datosActualizacion.etiquetas !== undefined) {
-        // Eliminar etiquetas existentes
-        await client.query(
-          'DELETE FROM tarea_etiquetas WHERE tarea_id = $1',
-          [tareaId]
-        );
+      // Update tags if specified
+      if (updateData.tags !== undefined) {
+        // Delete existing tags
+        await client.query('DELETE FROM task_tags WHERE task_id = $1', [
+          taskId,
+        ]);
 
-        // Agregar nuevas etiquetas
-        if (datosActualizacion.etiquetas.length > 0) {
-          for (const etiquetaId of datosActualizacion.etiquetas) {
+        // Add new tags
+        if (updateData.tags.length > 0) {
+          for (const tagId of updateData.tags) {
             await client.query(
-              'INSERT INTO tarea_etiquetas (tarea_id, etiqueta_id) VALUES ($1, $2)',
-              [tareaId, etiquetaId]
+              'INSERT INTO task_tags (task_id, tag_id) VALUES ($1, $2)',
+              [taskId, tagId]
             );
           }
         }
@@ -548,204 +552,228 @@ export const actualizarTarea = async (
       return true;
     });
 
-    // Obtener la Task actualizada
-    const tareaActualizada = await obtenerTareaPorId(tareaId, usuarioId);
+    // Get updated task
+    const updatedTask = await getTaskById(taskId, userId);
 
-    if (tareaActualizada.success) {
+    if (updatedTask.success) {
       return {
         success: true,
-        data: tareaActualizada.data!,
-        message: 'Task actualizada exitosamente',
+        data: updatedTask.data!,
+        message: 'Task updated successfully',
       };
     } else {
-      return tareaActualizada;
+      return updatedTask;
     }
   } catch (error) {
-    console.error('Error actualizando Task:', error);
+    console.error('Error updating task:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error interno del servidor',
+      error: error instanceof Error ? error.message : 'Internal server error',
     };
   }
 };
 
 /**
- * Elimina una Task
+ * Deletes a task
  */
-export const eliminarTarea = async (
-  tareaId: number,
-  usuarioId: number
+export const deleteTask = async (
+  taskId: number,
+  userId: number
 ): Promise<ApiResponse<void>> => {
   try {
-    const resultado = await transaction(async (client) => {
-      // Eliminar asociaciones con etiquetas
-      await client.query(
-        'DELETE FROM tarea_etiquetas WHERE tarea_id = $1',
-        [tareaId]
-      );
+    const result = await transaction(async (client) => {
+      // Delete associations with tags
+      await client.query('DELETE FROM task_tags WHERE task_id = $1', [taskId]);
 
-      // Eliminar la Task
+      // Delete the task
       const deleteResult = await client.query(
-        'DELETE FROM tareas WHERE id = $1 AND usuario_id = $2',
-        [tareaId, usuarioId]
+        'DELETE FROM tasks WHERE id = $1 AND user_id = $2',
+        [taskId, userId]
       );
 
       return deleteResult.rowCount;
     });
 
-    if (resultado === 0) {
+    if (result === 0) {
       return {
         success: false,
-        error: 'Task no encontrada',
+        error: 'Task not found',
       };
     }
 
     return {
       success: true,
-      message: 'Task eliminada exitosamente',
+      message: 'Task deleted successfully',
     };
   } catch (error) {
-    console.error('Error eliminando Task:', error);
+    console.error('Error deleting task:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Obtiene estadísticas de las tareas del User
+ * Gets user task statistics
  */
-export const obtenerEstadisticasTareas = async (
-  usuarioId: number
+export const getTaskStatistics = async (
+  userId: number
 ): Promise<ApiResponse<any>> => {
   try {
-    // Estadísticas generales
-    const estadisticasGenerales = await query(`
+    // General statistics
+    const generalStats = await query(
+      `
       SELECT 
-        COUNT(*) as total_tareas,
-        COUNT(CASE WHEN completada = true THEN 1 END) as tareas_completadas,
-        COUNT(CASE WHEN completada = false THEN 1 END) as tareas_pendientes,
-        COUNT(CASE WHEN fecha_vencimiento < NOW() AND completada = false THEN 1 END) as tareas_vencidas,
-        COUNT(CASE WHEN fecha_vencimiento >= NOW() AND fecha_vencimiento <= NOW() + INTERVAL '7 days' AND completada = false THEN 1 END) as tareas_proximas
-      FROM tareas 
-      WHERE usuario_id = $1
-    `, [usuarioId]);
+        COUNT(*) as total_tasks,
+        COUNT(CASE WHEN completed = true THEN 1 END) as completed_tasks,
+        COUNT(CASE WHEN completed = false THEN 1 END) as pending_tasks,
+        COUNT(CASE WHEN due_date < NOW() AND completed = false THEN 1 END) as overdue_tasks,
+        COUNT(CASE WHEN due_date >= NOW() AND due_date <= NOW() + INTERVAL '7 days' AND completed = false THEN 1 END) as upcoming_tasks
+      FROM tasks 
+      WHERE user_id = $1
+    `,
+      [userId]
+    );
 
-    // Estadísticas por prioridad
-    const estadisticasPrioridad = await query(`
+    // Statistics by priority
+    const priorityStats = await query(
+      `
       SELECT 
-        prioridad,
+        priority,
         COUNT(*) as total,
-        COUNT(CASE WHEN completada = true THEN 1 END) as completadas,
-        COUNT(CASE WHEN completada = false THEN 1 END) as pendientes
-      FROM tareas 
-      WHERE usuario_id = $1
-      GROUP BY prioridad
+        COUNT(CASE WHEN completed = true THEN 1 END) as completed,
+        COUNT(CASE WHEN completed = false THEN 1 END) as pending
+      FROM tasks 
+      WHERE user_id = $1
+      GROUP BY priority
       ORDER BY 
-        CASE prioridad 
-          WHEN 'alta' THEN 1 
-          WHEN 'media' THEN 2 
-          WHEN 'baja' THEN 3 
+        CASE priority 
+          WHEN 'high' THEN 1 
+          WHEN 'medium' THEN 2 
+          WHEN 'low' THEN 3 
         END
-    `, [usuarioId]);
+    `,
+      [userId]
+    );
 
-    // Estadísticas por categoría
-    const estadisticasCategorias = await query(`
+    // Statistics by category
+    const categoryStats = await query(
+      `
       SELECT 
-        c.id as categoria_id,
-        c.nombre as categoria_nombre,
-        c.color as categoria_color,
-        COUNT(t.id) as total_tareas,
-        COUNT(CASE WHEN t.completada = true THEN 1 END) as tareas_completadas,
-        COUNT(CASE WHEN t.completada = false THEN 1 END) as tareas_pendientes
-      FROM categorias c
-      LEFT JOIN tareas t ON c.id = t.categoria_id AND t.usuario_id = $1
-      WHERE c.usuario_id = $1
-      GROUP BY c.id, c.nombre, c.color
-      ORDER BY total_tareas DESC
-    `, [usuarioId]);
+        c.id as category_id,
+        c.name as category_name,
+        c.color as category_color,
+        COUNT(t.id) as total_tasks,
+        COUNT(CASE WHEN t.completed = true THEN 1 END) as completed_tasks,
+        COUNT(CASE WHEN t.completed = false THEN 1 END) as pending_tasks
+      FROM categories c
+      LEFT JOIN tasks t ON c.id = t.category_id AND t.user_id = $1
+      WHERE c.user_id = $1
+      GROUP BY c.id, c.name, c.color
+      ORDER BY total_tasks DESC
+    `,
+      [userId]
+    );
 
-    // Productividad reciente (últimos 7 días)
-    const productividad = await query(`
+    // Recent productivity (last 7 days)
+    const productivity = await query(
+      `
       SELECT 
-        DATE(completada_en) as fecha,
-        COUNT(*) as tareas_completadas
-      FROM tareas 
-      WHERE usuario_id = $1 
-        AND completada = true 
-        AND completada_en >= NOW() - INTERVAL '7 days'
-      GROUP BY DATE(completada_en)
-      ORDER BY fecha DESC
-    `, [usuarioId]);
+        DATE(completed_at) as date,
+        COUNT(*) as completed_tasks
+      FROM tasks 
+      WHERE user_id = $1 
+        AND completed = true 
+        AND completed_at >= NOW() - INTERVAL '7 days'
+      GROUP BY DATE(completed_at)
+      ORDER BY date DESC
+    `,
+      [userId]
+    );
 
-    // Estadísticas de etiquetas más usadas
-    const etiquetasPopulares = await query(`
+    // Most used tags statistics
+    const popularTags = await query(
+      `
       SELECT 
         e.id,
-        e.nombre,
+        e.name,
         e.color,
-        COUNT(te.tarea_id) as uso_count
-      FROM etiquetas e
-      INNER JOIN tarea_etiquetas te ON e.id = te.etiqueta_id
-      INNER JOIN tareas t ON te.tarea_id = t.id
-      WHERE e.usuario_id = $1 AND t.usuario_id = $1
-      GROUP BY e.id, e.nombre, e.color
-      ORDER BY uso_count DESC
+        COUNT(te.task_id) as usage_count
+      FROM tags e
+      INNER JOIN task_tags te ON e.id = te.tag_id
+      INNER JOIN tasks t ON te.task_id = t.id
+      WHERE e.user_id = $1 AND t.user_id = $1
+      GROUP BY e.id, e.name, e.color
+      ORDER BY usage_count DESC
       LIMIT 10
-    `, [usuarioId]);
+    `,
+      [userId]
+    );
 
-    // Calcular porcentajes
-    const totales = estadisticasGenerales.rows[0];
-    const totalTareas = parseInt(totales.total_tareas);
-    const porcentajeCompletadas = totalTareas > 0 ? Math.round((parseInt(totales.tareas_completadas) / totalTareas) * 100) : 0;
+    // Calculate percentages
+    const totals = generalStats.rows[0];
+    const totalTasks = parseInt(totals.total_tasks);
+    const completedPercentage =
+      totalTasks > 0
+        ? Math.round((parseInt(totals.completed_tasks) / totalTasks) * 100)
+        : 0;
 
-    const estadisticas = {
-      resumen: {
-        total_tareas: parseInt(totales.total_tareas),
-        tareas_completadas: parseInt(totales.tareas_completadas),
-        tareas_pendientes: parseInt(totales.tareas_pendientes),
-        tareas_vencidas: parseInt(totales.tareas_vencidas),
-        tareas_proximas: parseInt(totales.tareas_proximas),
-        porcentaje_completadas: porcentajeCompletadas
+    const statistics = {
+      summary: {
+        total_tasks: parseInt(totals.total_tasks),
+        completed_tasks: parseInt(totals.completed_tasks),
+        pending_tasks: parseInt(totals.pending_tasks),
+        overdue_tasks: parseInt(totals.overdue_tasks),
+        upcoming_tasks: parseInt(totals.upcoming_tasks),
+        completed_percentage: completedPercentage,
       },
-      por_prioridad: estadisticasPrioridad.rows.map(row => ({
-        prioridad: row.prioridad,
+      by_priority: priorityStats.rows.map((row) => ({
+        priority: row.priority,
         total: parseInt(row.total),
-        completadas: parseInt(row.completadas),
-        pendientes: parseInt(row.pendientes),
-        porcentaje_completadas: parseInt(row.total) > 0 ? Math.round((parseInt(row.completadas) / parseInt(row.total)) * 100) : 0
+        completed: parseInt(row.completed),
+        pending: parseInt(row.pending),
+        completed_percentage:
+          parseInt(row.total) > 0
+            ? Math.round((parseInt(row.completed) / parseInt(row.total)) * 100)
+            : 0,
       })),
-      por_categoria: estadisticasCategorias.rows.map(row => ({
-        categoria_id: row.categoria_id,
-        categoria_nombre: row.categoria_nombre,
-        categoria_color: row.categoria_color,
-        total_tareas: parseInt(row.total_tareas),
-        tareas_completadas: parseInt(row.tareas_completadas),
-        tareas_pendientes: parseInt(row.tareas_pendientes),
-        porcentaje_completadas: parseInt(row.total_tareas) > 0 ? Math.round((parseInt(row.tareas_completadas) / parseInt(row.total_tareas)) * 100) : 0
+      by_category: categoryStats.rows.map((row) => ({
+        category_id: row.category_id,
+        category_name: row.category_name,
+        category_color: row.category_color,
+        total_tasks: parseInt(row.total_tasks),
+        completed_tasks: parseInt(row.completed_tasks),
+        pending_tasks: parseInt(row.pending_tasks),
+        completed_percentage:
+          parseInt(row.total_tasks) > 0
+            ? Math.round(
+                (parseInt(row.completed_tasks) / parseInt(row.total_tasks)) *
+                  100
+              )
+            : 0,
       })),
-      productividad_reciente: productividad.rows.map(row => ({
-        fecha: row.fecha,
-        tareas_completadas: parseInt(row.tareas_completadas)
+      recent_productivity: productivity.rows.map((row) => ({
+        date: row.date,
+        completed_tasks: parseInt(row.completed_tasks),
       })),
-      etiquetas_populares: etiquetasPopulares.rows.map(row => ({
+      popular_tags: popularTags.rows.map((row) => ({
         id: row.id,
-        nombre: row.nombre,
+        name: row.name,
         color: row.color,
-        uso_count: parseInt(row.uso_count)
-      }))
+        usage_count: parseInt(row.usage_count),
+      })),
     };
 
     return {
       success: true,
-      data: estadisticas,
+      data: statistics,
     };
   } catch (error) {
-    console.error('Error obteniendo estadísticas de tareas:', error);
+    console.error('Error getting task statistics:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };

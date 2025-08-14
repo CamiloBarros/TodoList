@@ -1,60 +1,79 @@
 ﻿import { pool } from '../config/database';
-import { 
-  Tag, 
-  CreateTagDTO, 
+import {
+  Tag,
+  CreateTagDTO,
   UpdateTagDTO,
-  EstadisticasEtiqueta,
+  TagStatistics,
   ErrorCode,
-  DatabaseError 
+  DatabaseError,
 } from '../types';
 
 /**
- * Genera un color aleatorio para la Tag si no se proporciona
+ * Generates a random color for the tag if not provided
  */
-const generarColorAleatorio = (): string => {
-  const colores = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
-    '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43',
-    '#F8B500', '#5D4E75', '#8395A7', '#00CED1', '#FF7675',
-    '#74B9FF', '#81ECEC', '#00B894', '#E17055', '#FDCB6E'
+const generateRandomColor = (): string => {
+  const colors = [
+    '#FF6B6B',
+    '#4ECDC4',
+    '#45B7D1',
+    '#96CEB4',
+    '#FECA57',
+    '#FF9FF3',
+    '#54A0FF',
+    '#5F27CD',
+    '#00D2D3',
+    '#FF9F43',
+    '#F8B500',
+    '#5D4E75',
+    '#8395A7',
+    '#00CED1',
+    '#FF7675',
+    '#74B9FF',
+    '#81ECEC',
+    '#00B894',
+    '#E17055',
+    '#FDCB6E',
   ];
-  return colores[Math.floor(Math.random() * colores.length)] as string;
+  return colors[Math.floor(Math.random() * colors.length)] as string;
 };
 
 /**
- * Obtener todas las etiquetas del User
+ * Get all user tags
  */
-export const obtenerEtiquetas = async (usuarioId: number): Promise<Tag[]> => {
+export const getTags = async (userId: number): Promise<Tag[]> => {
   const client = await pool.connect();
-  
+
   try {
-    const result = await client.query(`
+    const result = await client.query(
+      `
       SELECT 
         e.id,
-        e.nombre,
+        e.name,
         e.color,
-        e.creado_en,
-        e.actualizado_en,
-        COUNT(DISTINCT te.tarea_id) as uso_count
-      FROM etiquetas e
-      LEFT JOIN tarea_etiquetas te ON e.id = te.etiqueta_id
-      WHERE e.usuario_id = $1
-      GROUP BY e.id, e.nombre, e.color, e.creado_en, e.actualizado_en
-      ORDER BY e.nombre ASC
-    `, [usuarioId]);
+        e.created_at,
+        e.updated_at,
+        COUNT(DISTINCT te.task_id) as usage_count
+      FROM tags e
+      LEFT JOIN task_tags te ON e.id = te.tag_id
+      WHERE e.user_id = $1
+      GROUP BY e.id, e.name, e.color, e.created_at, e.updated_at
+      ORDER BY e.name ASC
+    `,
+      [userId]
+    );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row.id,
-      nombre: row.nombre,
+      name: row.name,
       color: row.color,
-      usuario_id: usuarioId,
-      creado_en: row.creado_en,
-      actualizado_en: row.actualizado_en,
-      uso_count: parseInt(row.uso_count) || 0
+      user_id: userId,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      usage_count: parseInt(row.usage_count) || 0,
     }));
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al obtener etiquetas',
+      'Error getting tags',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -64,28 +83,31 @@ export const obtenerEtiquetas = async (usuarioId: number): Promise<Tag[]> => {
 };
 
 /**
- * Obtener una Tag específica por ID
+ * Get a specific tag by ID
  */
-export const obtenerEtiquetaPorId = async (
-  etiquetaId: number, 
-  usuarioId: number
+export const getTagById = async (
+  tagId: number,
+  userId: number
 ): Promise<Tag | null> => {
   const client = await pool.connect();
-  
+
   try {
-    const result = await client.query(`
+    const result = await client.query(
+      `
       SELECT 
         e.id,
-        e.nombre,
+        e.name,
         e.color,
-        e.creado_en,
-        e.actualizado_en,
-        COUNT(DISTINCT te.tarea_id) as uso_count
-      FROM etiquetas e
-      LEFT JOIN tarea_etiquetas te ON e.id = te.etiqueta_id
-      WHERE e.id = $1 AND e.usuario_id = $2
-      GROUP BY e.id, e.nombre, e.color, e.creado_en, e.actualizado_en
-    `, [etiquetaId, usuarioId]);
+        e.created_at,
+        e.updated_at,
+        COUNT(DISTINCT te.task_id) as usage_count
+      FROM tags e
+      LEFT JOIN task_tags te ON e.id = te.tag_id
+      WHERE e.id = $1 AND e.user_id = $2
+      GROUP BY e.id, e.name, e.color, e.created_at, e.updated_at
+    `,
+      [tagId, userId]
+    );
 
     if (result.rows.length === 0) {
       return null;
@@ -94,16 +116,16 @@ export const obtenerEtiquetaPorId = async (
     const row = result.rows[0];
     return {
       id: row.id,
-      nombre: row.nombre,
+      name: row.name,
       color: row.color,
-      usuario_id: usuarioId,
-      creado_en: row.creado_en,
-      actualizado_en: row.actualizado_en,
-      uso_count: parseInt(row.uso_count) || 0
+      user_id: userId,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      usage_count: parseInt(row.usage_count) || 0,
     };
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al obtener Tag',
+      'Error getting tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -113,32 +135,32 @@ export const obtenerEtiquetaPorId = async (
 };
 
 /**
- * Verificar si una Tag con el mismo nombre ya existe para el User
+ * Check if a tag with the same name already exists for the user
  */
-export const existeEtiquetaConNombre = async (
-  nombre: string, 
-  usuarioId: number, 
-  excluirId?: number
+export const tagExistsWithName = async (
+  name: string,
+  userId: number,
+  excludeId?: number
 ): Promise<boolean> => {
   const client = await pool.connect();
-  
+
   try {
     let query = `
-      SELECT id FROM etiquetas 
-      WHERE LOWER(nombre) = LOWER($1) AND usuario_id = $2
+      SELECT id FROM tags 
+      WHERE LOWER(name) = LOWER($1) AND user_id = $2
     `;
-    const params: any[] = [nombre.trim(), usuarioId];
+    const params: any[] = [name.trim(), userId];
 
-    if (excluirId) {
+    if (excludeId) {
       query += ' AND id != $3';
-      params.push(excluirId);
+      params.push(excludeId);
     }
 
     const result = await client.query(query, params);
     return result.rows.length > 0;
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al verificar existencia de Tag',
+      'Error checking tag existence',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -148,58 +170,61 @@ export const existeEtiquetaConNombre = async (
 };
 
 /**
- * Crear una nueva Tag
+ * Create a new tag
  */
-export const crearEtiqueta = async (
-  etiquetaData: CreateTagDTO, 
-  usuarioId: number
+export const createTag = async (
+  tagData: CreateTagDTO,
+  userId: number
 ): Promise<Tag> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
-    // Verificar que no exista una Tag con el mismo nombre
-    const existeNombre = await existeEtiquetaConNombre(etiquetaData.nombre, usuarioId);
-    if (existeNombre) {
+    // Check that a tag with the same name doesn't exist
+    const nameExists = await tagExistsWithName(tagData.name, userId);
+    if (nameExists) {
       throw new DatabaseError(
-        'Ya existe una Tag con ese nombre',
+        'A tag with that name already exists',
         ErrorCode.VALIDATION_ERROR,
-        `La Tag "${etiquetaData.nombre}" ya existe`
+        `The tag "${tagData.name}" already exists`
       );
     }
 
-    // Generar color si no se proporciona
-    const color = etiquetaData.color || generarColorAleatorio();
+    // Generate color if not provided
+    const color = tagData.color || generateRandomColor();
 
-    // Crear la Tag
-    const result = await client.query(`
-      INSERT INTO etiquetas (nombre, color, usuario_id)
+    // Create the tag
+    const result = await client.query(
+      `
+      INSERT INTO tags (name, color, user_id)
       VALUES ($1, $2, $3)
-      RETURNING id, nombre, color, creado_en, actualizado_en
-    `, [etiquetaData.nombre.trim(), color, usuarioId]);
+      RETURNING id, name, color, created_at, updated_at
+    `,
+      [tagData.name.trim(), color, userId]
+    );
 
     await client.query('COMMIT');
 
-    const nuevaEtiqueta = result.rows[0];
+    const newTag = result.rows[0];
     return {
-      id: nuevaEtiqueta.id,
-      nombre: nuevaEtiqueta.nombre,
-      color: nuevaEtiqueta.color,
-      usuario_id: usuarioId,
-      creado_en: nuevaEtiqueta.creado_en,
-      actualizado_en: nuevaEtiqueta.actualizado_en,
-      uso_count: 0
+      id: newTag.id,
+      name: newTag.name,
+      color: newTag.color,
+      user_id: userId,
+      created_at: newTag.created_at,
+      updated_at: newTag.updated_at,
+      usage_count: 0,
     };
   } catch (error: any) {
     await client.query('ROLLBACK');
-    
+
     if (error instanceof DatabaseError) {
       throw error;
     }
-    
+
     throw new DatabaseError(
-      'Error al crear Tag',
+      'Error creating tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -209,74 +234,70 @@ export const crearEtiqueta = async (
 };
 
 /**
- * Actualizar una Tag existente
+ * Update an existing tag
  */
-export const actualizarEtiqueta = async (
-  etiquetaId: number,
-  etiquetaData: UpdateTagDTO,
-  usuarioId: number
+export const updateTag = async (
+  tagId: number,
+  tagData: UpdateTagDTO,
+  userId: number
 ): Promise<Tag | null> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
-    // Verificar que la Tag existe y pertenece al User
-    const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
-    if (!etiquetaExistente) {
+    // Check that the tag exists and belongs to the user
+    const existingTag = await getTagById(tagId, userId);
+    if (!existingTag) {
       return null;
     }
 
-    // Verificar nombre único si se está actualizando
-    if (etiquetaData.nombre) {
-      const existeNombre = await existeEtiquetaConNombre(
-        etiquetaData.nombre, 
-        usuarioId, 
-        etiquetaId
-      );
-      if (existeNombre) {
+    // Check unique name if updating
+    if (tagData.name) {
+      const nameExists = await tagExistsWithName(tagData.name, userId, tagId);
+      if (nameExists) {
         throw new DatabaseError(
-          'Ya existe una Tag con ese nombre',
+          'A tag with that name already exists',
           ErrorCode.VALIDATION_ERROR,
-          `La Tag "${etiquetaData.nombre}" ya existe`
+          `The tag "${tagData.name}" already exists`
         );
       }
     }
 
-    // Construir query de actualización dinámicamente
-    const camposActualizar: string[] = [];
-    const valores: any[] = [];
-    let contadorParametros = 1;
+    // Build update query dynamically
+    const fieldsToUpdate: string[] = [];
+    const values: any[] = [];
+    let parameterCounter = 1;
 
-    if (etiquetaData.nombre !== undefined) {
-      camposActualizar.push(`nombre = $${contadorParametros}`);
-      valores.push(etiquetaData.nombre.trim());
-      contadorParametros++;
+    if (tagData.name !== undefined) {
+      fieldsToUpdate.push(`name = $${parameterCounter}`);
+      values.push(tagData.name.trim());
+      parameterCounter++;
     }
 
-    if (etiquetaData.color !== undefined) {
-      camposActualizar.push(`color = $${contadorParametros}`);
-      valores.push(etiquetaData.color);
-      contadorParametros++;
+    if (tagData.color !== undefined) {
+      fieldsToUpdate.push(`color = $${parameterCounter}`);
+      values.push(tagData.color);
+      parameterCounter++;
     }
 
-    if (camposActualizar.length === 0) {
-      // No hay campos para actualizar, devolver la Tag existente
+    if (fieldsToUpdate.length === 0) {
+      // No fields to update, return existing tag
       await client.query('COMMIT');
-      return etiquetaExistente;
+      return existingTag;
     }
 
-    camposActualizar.push(`actualizado_en = NOW()`);
-    valores.push(etiquetaId, usuarioId);
+    fieldsToUpdate.push(`updated_at = NOW()`);
+    values.push(tagId, userId);
 
     const query = `
-      UPDATE etiquetas 
-      SET ${camposActualizar.join(', ')}
-      WHERE id = $${contadorParametros} AND usuario_id = $${contadorParametros + 1}
-      RETURNING id, nombre, color, creado_en, actualizado_en
+      UPDATE tags 
+      SET ${fieldsToUpdate.join(', ')}
+      WHERE id = $${parameterCounter} AND user_id = $${parameterCounter + 1}
+      RETURNING id, name, color, created_at, updated_at
     `;
 
-    const result = await client.query(query, valores);
+    const result = await client.query(query, values);
 
     if (result.rows.length === 0) {
       return null;
@@ -284,25 +305,25 @@ export const actualizarEtiqueta = async (
 
     await client.query('COMMIT');
 
-    const etiquetaActualizada = result.rows[0];
+    const updatedTag = result.rows[0];
     return {
-      id: etiquetaActualizada.id,
-      nombre: etiquetaActualizada.nombre,
-      color: etiquetaActualizada.color,
-      usuario_id: usuarioId,
-      creado_en: etiquetaActualizada.creado_en,
-      actualizado_en: etiquetaActualizada.actualizado_en,
-      uso_count: etiquetaExistente.uso_count || 0
+      id: updatedTag.id,
+      name: updatedTag.name,
+      color: updatedTag.color,
+      user_id: userId,
+      created_at: updatedTag.created_at,
+      updated_at: updatedTag.updated_at,
+      usage_count: existingTag.usage_count || 0,
     };
   } catch (error: any) {
     await client.query('ROLLBACK');
-    
+
     if (error instanceof DatabaseError) {
       throw error;
     }
-    
+
     throw new DatabaseError(
-      'Error al actualizar Tag',
+      'Error updating tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -312,26 +333,29 @@ export const actualizarEtiqueta = async (
 };
 
 /**
- * Verificar si una Tag tiene tareas asociadas
+ * Check if a tag has associated tasks
  */
-export const tieneEtiquetaTareasAsociadas = async (
-  etiquetaId: number, 
-  usuarioId: number
+export const tagHasAssociatedTasks = async (
+  tagId: number,
+  userId: number
 ): Promise<boolean> => {
   const client = await pool.connect();
-  
+
   try {
-    const result = await client.query(`
+    const result = await client.query(
+      `
       SELECT COUNT(*) as count
-      FROM tarea_etiquetas te
-      INNER JOIN tareas t ON te.tarea_id = t.id
-      WHERE te.etiqueta_id = $1 AND t.usuario_id = $2
-    `, [etiquetaId, usuarioId]);
+      FROM task_tags te
+      INNER JOIN tasks t ON te.task_id = t.id
+      WHERE te.tag_id = $1 AND t.user_id = $2
+    `,
+      [tagId, userId]
+    );
 
     return parseInt(result.rows[0].count) > 0;
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al verificar asociaciones de Tag',
+      'Error checking tag associations',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -341,52 +365,56 @@ export const tieneEtiquetaTareasAsociadas = async (
 };
 
 /**
- * Eliminar una Tag (solo si no tiene tareas asociadas)
+ * Delete a tag (only if it has no associated tasks)
  */
-export const eliminarEtiqueta = async (
-  etiquetaId: number, 
-  usuarioId: number
-): Promise<{ eliminada: boolean; mensaje: string }> => {
+export const deleteTag = async (
+  tagId: number,
+  userId: number
+): Promise<{ deleted: boolean; message: string }> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
-    // Verificar que la Tag existe y pertenece al User
-    const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
-    if (!etiquetaExistente) {
+    // Check that the tag exists and belongs to the user
+    const existingTag = await getTagById(tagId, userId);
+    if (!existingTag) {
       return {
-        eliminada: false,
-        mensaje: 'Tag no encontrada'
+        deleted: false,
+        message: 'Tag not found',
       };
     }
 
-    // Verificar si tiene tareas asociadas
-    const tieneAsociaciones = await tieneEtiquetaTareasAsociadas(etiquetaId, usuarioId);
-    if (tieneAsociaciones) {
+    // Check if it has associated tasks
+    const hasAssociations = await tagHasAssociatedTasks(tagId, userId);
+    if (hasAssociations) {
       return {
-        eliminada: false,
-        mensaje: 'No se puede eliminar la Tag porque tiene tareas asociadas. Use la eliminación forzada si desea continuar.'
+        deleted: false,
+        message:
+          'Cannot delete tag because it has associated tasks. Use forced deletion if you want to continue.',
       };
     }
 
-    // Eliminar la Tag
-    await client.query(`
-      DELETE FROM etiquetas 
-      WHERE id = $1 AND usuario_id = $2
-    `, [etiquetaId, usuarioId]);
+    // Delete the tag
+    await client.query(
+      `
+      DELETE FROM tags 
+      WHERE id = $1 AND user_id = $2
+    `,
+      [tagId, userId]
+    );
 
     await client.query('COMMIT');
 
     return {
-      eliminada: true,
-      mensaje: 'Tag eliminada exitosamente'
+      deleted: true,
+      message: 'Tag deleted successfully',
     };
   } catch (error: any) {
     await client.query('ROLLBACK');
-    
+
     throw new DatabaseError(
-      'Error al eliminar Tag',
+      'Error deleting tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -396,62 +424,71 @@ export const eliminarEtiqueta = async (
 };
 
 /**
- * Eliminar una Tag forzadamente (eliminando también sus asociaciones)
+ * Force delete a tag (also removing its associations)
  */
-export const eliminarEtiquetaForzar = async (
-  etiquetaId: number, 
-  usuarioId: number
-): Promise<{ eliminada: boolean; mensaje: string; tareasAfectadas?: number }> => {
+export const forceDeleteTag = async (
+  tagId: number,
+  userId: number
+): Promise<{ deleted: boolean; message: string; affectedTasks?: number }> => {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
 
-    // Verificar que la Tag existe y pertenece al User
-    const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
-    if (!etiquetaExistente) {
+    // Check that the tag exists and belongs to the user
+    const existingTag = await getTagById(tagId, userId);
+    if (!existingTag) {
       return {
-        eliminada: false,
-        mensaje: 'Tag no encontrada'
+        deleted: false,
+        message: 'Tag not found',
       };
     }
 
-    // Contar tareas afectadas antes de eliminar
-    const conteoResult = await client.query(`
-      SELECT COUNT(DISTINCT te.tarea_id) as count
-      FROM tarea_etiquetas te
-      INNER JOIN tareas t ON te.tarea_id = t.id
-      WHERE te.etiqueta_id = $1 AND t.usuario_id = $2
-    `, [etiquetaId, usuarioId]);
+    // Count affected tasks before deleting
+    const countResult = await client.query(
+      `
+      SELECT COUNT(DISTINCT te.task_id) as count
+      FROM task_tags te
+      INNER JOIN tasks t ON te.task_id = t.id
+      WHERE te.tag_id = $1 AND t.user_id = $2
+    `,
+      [tagId, userId]
+    );
 
-    const tareasAfectadas = parseInt(conteoResult.rows[0].count);
+    const affectedTasks = parseInt(countResult.rows[0].count);
 
-    // Eliminar asociaciones con tareas
-    await client.query(`
-      DELETE FROM tarea_etiquetas 
-      WHERE etiqueta_id = $1 AND tarea_id IN (
-        SELECT id FROM tareas WHERE usuario_id = $2
+    // Delete associations with tasks
+    await client.query(
+      `
+      DELETE FROM task_tags 
+      WHERE tag_id = $1 AND task_id IN (
+        SELECT id FROM tasks WHERE user_id = $2
       )
-    `, [etiquetaId, usuarioId]);
+    `,
+      [tagId, userId]
+    );
 
-    // Eliminar la Tag
-    await client.query(`
-      DELETE FROM etiquetas 
-      WHERE id = $1 AND usuario_id = $2
-    `, [etiquetaId, usuarioId]);
+    // Delete the tag
+    await client.query(
+      `
+      DELETE FROM tags 
+      WHERE id = $1 AND user_id = $2
+    `,
+      [tagId, userId]
+    );
 
     await client.query('COMMIT');
 
     return {
-      eliminada: true,
-      mensaje: `Tag eliminada exitosamente. Se removió de ${tareasAfectadas} Task(s).`,
-      tareasAfectadas
+      deleted: true,
+      message: `Tag deleted successfully. Removed from ${affectedTasks} task(s).`,
+      affectedTasks,
     };
   } catch (error: any) {
     await client.query('ROLLBACK');
-    
+
     throw new DatabaseError(
-      'Error al eliminar Tag forzadamente',
+      'Error force deleting tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -461,58 +498,65 @@ export const eliminarEtiquetaForzar = async (
 };
 
 /**
- * Obtener estadísticas de una Tag
+ * Get tag statistics
  */
-export const obtenerEstadisticasEtiqueta = async (
-  etiquetaId: number, 
-  usuarioId: number
-): Promise<EstadisticasEtiqueta | null> => {
+export const getTagStatistics = async (
+  tagId: number,
+  userId: number
+): Promise<TagStatistics | null> => {
   const client = await pool.connect();
-  
+
   try {
-    // Verificar que la Tag existe y pertenece al User
-    const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
-    if (!etiquetaExistente) {
+    // Check that the tag exists and belongs to the user
+    const existingTag = await getTagById(tagId, userId);
+    if (!existingTag) {
       return null;
     }
 
-    // Obtener estadísticas detalladas
-    const result = await client.query(`
+    // Get detailed statistics
+    const result = await client.query(
+      `
       SELECT 
-        COUNT(DISTINCT te.tarea_id) as total_tareas,
-        COUNT(DISTINCT CASE WHEN t.completada = true THEN te.tarea_id END) as tareas_completadas,
-        COUNT(DISTINCT CASE WHEN t.completada = false THEN te.tarea_id END) as tareas_pendientes,
-        COUNT(DISTINCT CASE WHEN t.prioridad = 'alta' THEN te.tarea_id END) as prioridad_alta,
-        COUNT(DISTINCT CASE WHEN t.prioridad = 'media' THEN te.tarea_id END) as prioridad_media,
-        COUNT(DISTINCT CASE WHEN t.prioridad = 'baja' THEN te.tarea_id END) as prioridad_baja,
-        COUNT(DISTINCT CASE WHEN t.fecha_vencimiento IS NOT NULL AND t.fecha_vencimiento < NOW() AND t.completada = false THEN te.tarea_id END) as tareas_vencidas
-      FROM tarea_etiquetas te
-      INNER JOIN tareas t ON te.tarea_id = t.id
-      WHERE te.etiqueta_id = $1 AND t.usuario_id = $2
-    `, [etiquetaId, usuarioId]);
+        COUNT(DISTINCT te.task_id) as total_tasks,
+        COUNT(DISTINCT CASE WHEN t.completed = true THEN te.task_id END) as completed_tasks,
+        COUNT(DISTINCT CASE WHEN t.completed = false THEN te.task_id END) as pending_tasks,
+        COUNT(DISTINCT CASE WHEN t.priority = 'high' THEN te.task_id END) as high_priority,
+        COUNT(DISTINCT CASE WHEN t.priority = 'medium' THEN te.task_id END) as medium_priority,
+        COUNT(DISTINCT CASE WHEN t.priority = 'low' THEN te.task_id END) as low_priority,
+        COUNT(DISTINCT CASE WHEN t.due_date IS NOT NULL AND t.due_date < NOW() AND t.completed = false THEN te.task_id END) as overdue_tasks
+      FROM task_tags te
+      INNER JOIN tasks t ON te.task_id = t.id
+      WHERE te.tag_id = $1 AND t.user_id = $2
+    `,
+      [tagId, userId]
+    );
 
     const stats = result.rows[0];
 
     return {
-      etiqueta_id: etiquetaId,
-      nombre: etiquetaExistente.nombre,
-      color: etiquetaExistente.color,
-      total_tareas: parseInt(stats.total_tareas) || 0,
-      tareas_completadas: parseInt(stats.tareas_completadas) || 0,
-      tareas_pendientes: parseInt(stats.tareas_pendientes) || 0,
-      tareas_vencidas: parseInt(stats.tareas_vencidas) || 0,
-      distribucion_prioridad: {
-        alta: parseInt(stats.prioridad_alta) || 0,
-        media: parseInt(stats.prioridad_media) || 0,
-        baja: parseInt(stats.prioridad_baja) || 0,
+      tag_id: tagId,
+      name: existingTag.name,
+      color: existingTag.color,
+      total_tasks: parseInt(stats.total_tasks) || 0,
+      completed_tasks: parseInt(stats.completed_tasks) || 0,
+      pending_tasks: parseInt(stats.pending_tasks) || 0,
+      overdue_tasks: parseInt(stats.overdue_tasks) || 0,
+      priority_distribution: {
+        high: parseInt(stats.high_priority) || 0,
+        medium: parseInt(stats.medium_priority) || 0,
+        low: parseInt(stats.low_priority) || 0,
       },
-      porcentaje_completado: parseInt(stats.total_tareas) > 0 
-        ? Math.round((parseInt(stats.tareas_completadas) / parseInt(stats.total_tareas)) * 100)
-        : 0
+      completion_percentage:
+        parseInt(stats.total_tasks) > 0
+          ? Math.round(
+              (parseInt(stats.completed_tasks) / parseInt(stats.total_tasks)) *
+                100
+            )
+          : 0,
     };
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al obtener estadísticas de Tag',
+      'Error getting tag statistics',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -522,45 +566,48 @@ export const obtenerEstadisticasEtiqueta = async (
 };
 
 /**
- * Obtener etiquetas más usadas del User
+ * Get most used tags by user
  */
-export const obtenerEtiquetasMasUsadas = async (
-  usuarioId: number, 
-  limite: number = 10
+export const getMostUsedTags = async (
+  userId: number,
+  limit: number = 10
 ): Promise<Tag[]> => {
   const client = await pool.connect();
-  
+
   try {
-    const result = await client.query(`
+    const result = await client.query(
+      `
       SELECT 
         e.id,
-        e.nombre,
+        e.name,
         e.color,
-        e.creado_en,
-        e.actualizado_en,
-        COUNT(DISTINCT te.tarea_id) as uso_count
-      FROM etiquetas e
-      LEFT JOIN tarea_etiquetas te ON e.id = te.etiqueta_id
-      LEFT JOIN tareas t ON te.tarea_id = t.id
-      WHERE e.usuario_id = $1
-      GROUP BY e.id, e.nombre, e.color, e.creado_en, e.actualizado_en
-      HAVING COUNT(DISTINCT te.tarea_id) > 0
-      ORDER BY uso_count DESC, e.nombre ASC
+        e.created_at,
+        e.updated_at,
+        COUNT(DISTINCT te.task_id) as usage_count
+      FROM tags e
+      LEFT JOIN task_tags te ON e.id = te.tag_id
+      LEFT JOIN tasks t ON te.task_id = t.id
+      WHERE e.user_id = $1
+      GROUP BY e.id, e.name, e.color, e.created_at, e.updated_at
+      HAVING COUNT(DISTINCT te.task_id) > 0
+      ORDER BY usage_count DESC, e.name ASC
       LIMIT $2
-    `, [usuarioId, limite]);
+    `,
+      [userId, limit]
+    );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row.id,
-      nombre: row.nombre,
+      name: row.name,
       color: row.color,
-      usuario_id: usuarioId,
-      creado_en: row.creado_en,
-      actualizado_en: row.actualizado_en,
-      uso_count: parseInt(row.uso_count) || 0
+      user_id: userId,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      usage_count: parseInt(row.usage_count) || 0,
     }));
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al obtener etiquetas más usadas',
+      'Error getting most used tags',
       ErrorCode.DATABASE_ERROR,
       error.message
     );

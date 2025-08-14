@@ -1,60 +1,60 @@
--- Migration 004: Create etiquetas table
+-- Migration 004: Create tags table
 -- Description: Tags/labels for flexible task categorization
 -- Date: 2025-08-13
 
 BEGIN;
 
--- Create etiquetas table
-CREATE TABLE IF NOT EXISTS etiquetas (
+-- Create tags table
+CREATE TABLE IF NOT EXISTS tags (
     id SERIAL PRIMARY KEY,
-    usuario_id INTEGER NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
+    user_id INTEGER NOT NULL,
+    name VARCHAR(50) NOT NULL,
     color VARCHAR(7) DEFAULT '#6B7280',
-    creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- Foreign Key Constraints
-    CONSTRAINT fk_etiquetas_usuario 
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tags_user 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     
     -- Business Logic Constraints
-    CONSTRAINT etiquetas_nombre_length 
-        CHECK (char_length(nombre) >= 1 AND char_length(nombre) <= 50),
-    CONSTRAINT etiquetas_color_format 
+    CONSTRAINT tags_name_length 
+        CHECK (char_length(name) >= 1 AND char_length(name) <= 50),
+    CONSTRAINT tags_color_format 
         CHECK (color ~* '^#[0-9A-Fa-f]{6}$'),
     
     -- Unique constraint per user
-    CONSTRAINT uk_etiquetas_usuario_nombre 
-        UNIQUE (usuario_id, nombre)
+    CONSTRAINT uk_tags_user_name 
+        UNIQUE (user_id, name)
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_etiquetas_usuario_id ON etiquetas(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_etiquetas_nombre ON etiquetas(nombre);
-CREATE INDEX IF NOT EXISTS idx_etiquetas_creado_en ON etiquetas(creado_en);
+CREATE INDEX IF NOT EXISTS idx_tags_user_id ON tags(user_id);
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+CREATE INDEX IF NOT EXISTS idx_tags_created_at ON tags(created_at);
 
--- Create function to update actualizado_en timestamp
-CREATE OR REPLACE FUNCTION actualizar_timestamp()
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_timestamp()
     RETURNS TRIGGER AS $$
 BEGIN
-    NEW.actualizado_en = CURRENT_TIMESTAMP;
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger to automatically update actualizado_en
-CREATE TRIGGER IF NOT EXISTS trigger_etiquetas_actualizado_en
-    BEFORE UPDATE ON etiquetas
+-- Create trigger to automatically update updated_at
+CREATE TRIGGER trigger_tags_updated_at
+    BEFORE UPDATE ON tags
     FOR EACH ROW
-    EXECUTE FUNCTION actualizar_timestamp();
+    EXECUTE FUNCTION update_timestamp();
 
 -- Add comments for documentation
-COMMENT ON TABLE etiquetas IS 'User-defined tags for flexible task categorization';
-COMMENT ON COLUMN etiquetas.id IS 'Primary key, auto-incrementing tag ID';
-COMMENT ON COLUMN etiquetas.usuario_id IS 'Foreign key to usuarios table';
-COMMENT ON COLUMN etiquetas.nombre IS 'Tag name, unique per user';
-COMMENT ON COLUMN etiquetas.color IS 'Hex color code for visual identification';
-COMMENT ON COLUMN etiquetas.creado_en IS 'Timestamp when the tag was created';
-COMMENT ON COLUMN etiquetas.actualizado_en IS 'Timestamp when the tag was last updated';
+COMMENT ON TABLE tags IS 'User-defined tags for flexible task categorization';
+COMMENT ON COLUMN tags.id IS 'Primary key, auto-incrementing tag ID';
+COMMENT ON COLUMN tags.user_id IS 'Foreign key to users table';
+COMMENT ON COLUMN tags.name IS 'Tag name, unique per user';
+COMMENT ON COLUMN tags.color IS 'Hex color code for visual identification';
+COMMENT ON COLUMN tags.created_at IS 'Timestamp when the tag was created';
+COMMENT ON COLUMN tags.updated_at IS 'Timestamp when the tag was last updated';
 
 COMMIT;

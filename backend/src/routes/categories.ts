@@ -2,89 +2,89 @@ import { Router } from 'express';
 import * as categoriesController from '../controllers/categoriesController';
 import { authenticateToken } from '../middleware/auth';
 import {
-  validateCrearCategoria,
-  validateActualizarCategoria,
+  validateCreateCategory,
+  validateUpdateCategory,
   validateIdParam,
 } from '../middleware/validation';
 
 const router = Router();
 
-// Todas las rutas de categorías requieren autenticación
+// All category routes require authentication
 router.use(authenticateToken);
 
 /**
- * @route   GET /api/categorias
- * @desc    Obtener todas las categorías del usuario
+ * @route   GET /api/categories
+ * @desc    Get all user categories
  * @access  Private
  */
-router.get('/', categoriesController.obtenerCategorias as any);
+router.get('/', categoriesController.getCategories as any);
 
 /**
- * @route   GET /api/categorias/:id
- * @desc    Obtener una categoría específica por ID
+ * @route   GET /api/categories/:id
+ * @desc    Get a specific category by ID
  * @access  Private
  */
 router.get(
   '/:id',
   ...validateIdParam,
-  categoriesController.obtenerCategoriaPorId as any
+  categoriesController.getCategoryById as any
 );
 
 /**
- * @route   GET /api/categorias/:id/estadisticas
- * @desc    Obtener estadísticas de una categoría (número de tareas)
+ * @route   GET /api/categories/:id/statistics
+ * @desc    Get category statistics (number of tasks)
  * @access  Private
  */
 router.get(
-  '/:id/estadisticas',
+  '/:id/statistics',
   ...validateIdParam,
-  categoriesController.obtenerEstadisticasCategoria as any
+  categoriesController.getCategoryStatistics as any
 );
 
 /**
- * @route   POST /api/categorias
- * @desc    Crear una nueva categoría
+ * @route   POST /api/categories
+ * @desc    Create a new category
  * @access  Private
- * @body    { nombre, descripcion?, color? }
+ * @body    { name, description?, color? }
  */
 router.post(
   '/',
-  ...validateCrearCategoria,
-  categoriesController.crearCategoria as any
+  ...validateCreateCategory,
+  categoriesController.createCategory as any
 );
 
 /**
- * @route   PUT /api/categorias/:id
- * @desc    Actualizar una categoría
+ * @route   PUT /api/categories/:id
+ * @desc    Update a category
  * @access  Private
- * @body    { nombre?, descripcion?, color? }
+ * @body    { name?, description?, color? }
  */
 router.put(
   '/:id',
-  ...validateActualizarCategoria,
-  categoriesController.actualizarCategoria as any
+  ...validateUpdateCategory,
+  categoriesController.updateCategory as any
 );
 
 /**
- * @route   DELETE /api/categorias/:id
- * @desc    Eliminar una categoría (solo si no tiene tareas asociadas)
+ * @route   DELETE /api/categories/:id
+ * @desc    Delete a category (only if it has no associated tasks)
  * @access  Private
  */
 router.delete(
   '/:id',
   ...validateIdParam,
-  categoriesController.eliminarCategoria as any
+  categoriesController.deleteCategory as any
 );
 
 /**
- * @route   DELETE /api/categorias/:id/forzar
- * @desc    Eliminar una categoría forzadamente (mueve las tareas a "sin categoría")
+ * @route   DELETE /api/categories/:id/force
+ * @desc    Delete a category forcefully (moves tasks to "no category")
  * @access  Private
  */
 router.delete(
-  '/:id/forzar',
+  '/:id/force',
   ...validateIdParam,
-  categoriesController.eliminarCategoriaForzar as any
+  categoriesController.forceCategoryDeletion as any
 );
 
 export default router;

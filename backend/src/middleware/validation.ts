@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 
 /**
- * Middleware para manejar errores de validación
+ * Middleware to handle validation errors
  */
 export const handleValidationErrors = (
   req: Request,
@@ -10,9 +10,9 @@ export const handleValidationErrors = (
   next: NextFunction
 ): void => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
-    const errorDetails = errors.array().map(error => ({
+    const errorDetails = errors.array().map((error) => ({
       field: error.type === 'field' ? (error as any).path : 'unknown',
       message: error.msg,
       value: error.type === 'field' ? (error as any).value : undefined,
@@ -21,7 +21,7 @@ export const handleValidationErrors = (
     res.status(400).json({
       success: false,
       error: {
-        message: 'Datos de entrada inválidos',
+        message: 'Invalid input data',
         type: 'VALIDATION_ERROR',
         statusCode: 400,
         timestamp: new Date().toISOString(),
@@ -35,70 +35,66 @@ export const handleValidationErrors = (
 };
 
 /**
- * Validaciones para autenticación
+ * Authentication validations
  */
-export const validateRegistro = [
-  body('email')
-    .isEmail()
-    .withMessage('Debe ser un email válido')
-    .normalizeEmail(),
-  body('nombre')
+export const validateRegister = [
+  body('email').isEmail().withMessage('Must be a valid email').normalizeEmail(),
+  body('name')
     .isLength({ min: 2, max: 50 })
-    .withMessage('El nombre debe tener entre 2 y 50 caracteres')
+    .withMessage('Name must be between 2 and 50 characters')
     .trim(),
   body('password')
     .isLength({ min: 8 })
-    .withMessage('La contraseña debe tener al menos 8 caracteres')
+    .withMessage('Password must be at least 8 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('La contraseña debe contener al menos una minúscula, una mayúscula y un número'),
+    .withMessage(
+      'Password must contain at least one lowercase, one uppercase and one number'
+    ),
   handleValidationErrors,
 ];
 
 export const validateLogin = [
-  body('email')
-    .isEmail()
-    .withMessage('Debe ser un email válido')
-    .normalizeEmail(),
-  body('password')
-    .notEmpty()
-    .withMessage('La contraseña es requerida'),
+  body('email').isEmail().withMessage('Must be a valid email').normalizeEmail(),
+  body('password').notEmpty().withMessage('Password is required'),
   handleValidationErrors,
 ];
 
 /**
- * Validaciones para tareas
+ * Task validations
  */
-export const validateCrearTarea = [
-  body('titulo')
+export const validateCreateTask = [
+  body('title')
     .isLength({ min: 1, max: 200 })
-    .withMessage('El título debe tener entre 1 y 200 caracteres')
+    .withMessage('Title must be between 1 and 200 characters')
     .trim(),
-  body('descripcion')
+  body('description')
     .optional()
     .isLength({ max: 1000 })
-    .withMessage('La descripción no puede exceder 1000 caracteres')
+    .withMessage('Description cannot exceed 1000 characters')
     .trim(),
-  body('categoria_id')
+  body('category_id')
     .optional()
     .isInt({ min: 1 })
-    .withMessage('El ID de categoría debe ser un número entero positivo'),
-  body('prioridad')
+    .withMessage('Category ID must be a positive integer'),
+  body('priority')
     .optional()
-    .isIn(['baja', 'media', 'alta'])
-    .withMessage('La prioridad debe ser: baja, media o alta'),
-  body('fecha_vencimiento')
+    .isIn(['low', 'medium', 'high'])
+    .withMessage('Priority must be: low, medium or high'),
+  body('due_date')
     .optional()
     .isISO8601()
-    .withMessage('La fecha de vencimiento debe ser una fecha válida en formato ISO 8601'),
-  body('etiquetas')
+    .withMessage('Due date must be a valid date in ISO 8601 format'),
+  body('tags')
     .optional()
     .isArray()
-    .withMessage('Las etiquetas deben ser un array')
-    .custom((etiquetas) => {
-      if (etiquetas && etiquetas.length > 0) {
-        const validIds = etiquetas.every((id: any) => Number.isInteger(id) && id > 0);
+    .withMessage('Tags must be an array')
+    .custom((tags) => {
+      if (tags && tags.length > 0) {
+        const validIds = tags.every(
+          (id: any) => Number.isInteger(id) && id > 0
+        );
         if (!validIds) {
-          throw new Error('Todas las etiquetas deben ser IDs enteros positivos');
+          throw new Error('All tags must be positive integer IDs');
         }
       }
       return true;
@@ -106,55 +102,57 @@ export const validateCrearTarea = [
   handleValidationErrors,
 ];
 
-export const validateActualizarTarea = [
+export const validateUpdateTask = [
   param('id')
     .isInt({ min: 1 })
-    .withMessage('El ID de la tarea debe ser un número entero positivo'),
-  body('titulo')
+    .withMessage('Task ID must be a positive integer'),
+  body('title')
     .optional()
     .isLength({ min: 1, max: 200 })
-    .withMessage('El título debe tener entre 1 y 200 caracteres')
+    .withMessage('Title must be between 1 and 200 characters')
     .trim(),
-  body('descripcion')
+  body('description')
     .optional()
     .isLength({ max: 1000 })
-    .withMessage('La descripción no puede exceder 1000 caracteres')
+    .withMessage('Description cannot exceed 1000 characters')
     .trim(),
-  body('categoria_id')
+  body('category_id')
     .optional()
     .custom((value) => {
-      if (value === null) return true; // Permite null para eliminar categoría
+      if (value === null) return true; // Allow null to remove category
       if (!Number.isInteger(value) || value < 1) {
-        throw new Error('El ID de categoría debe ser un número entero positivo o null');
+        throw new Error('Category ID must be a positive integer or null');
       }
       return true;
     }),
-  body('prioridad')
+  body('priority')
     .optional()
-    .isIn(['baja', 'media', 'alta'])
-    .withMessage('La prioridad debe ser: baja, media o alta'),
-  body('fecha_vencimiento')
+    .isIn(['low', 'medium', 'high'])
+    .withMessage('Priority must be: low, medium or high'),
+  body('due_date')
     .optional()
     .custom((value) => {
-      if (value === null) return true; // Permite null para eliminar fecha
+      if (value === null) return true; // Allow null to remove date
       if (!new Date(value).getTime()) {
-        throw new Error('La fecha de vencimiento debe ser una fecha válida o null');
+        throw new Error('Due date must be a valid date or null');
       }
       return true;
     }),
-  body('completada')
+  body('completed')
     .optional()
     .isBoolean()
-    .withMessage('El estado completada debe ser true o false'),
-  body('etiquetas')
+    .withMessage('Completed status must be true or false'),
+  body('tags')
     .optional()
     .isArray()
-    .withMessage('Las etiquetas deben ser un array')
-    .custom((etiquetas) => {
-      if (etiquetas && etiquetas.length > 0) {
-        const validIds = etiquetas.every((id: any) => Number.isInteger(id) && id > 0);
+    .withMessage('Tags must be an array')
+    .custom((tags) => {
+      if (tags && tags.length > 0) {
+        const validIds = tags.every(
+          (id: any) => Number.isInteger(id) && id > 0
+        );
         if (!validIds) {
-          throw new Error('Todas las etiquetas deben ser IDs enteros positivos');
+          throw new Error('All tags must be positive integer IDs');
         }
       }
       return true;
@@ -163,144 +161,146 @@ export const validateActualizarTarea = [
 ];
 
 /**
- * Validaciones para categorías
+ * Category validations
  */
-export const validateCrearCategoria = [
-  body('nombre')
+export const validateCreateCategory = [
+  body('name')
     .isLength({ min: 1, max: 50 })
-    .withMessage('El nombre debe tener entre 1 y 50 caracteres')
+    .withMessage('Name must be between 1 and 50 characters')
     .trim(),
-  body('descripcion')
+  body('description')
     .optional()
     .isLength({ max: 500 })
-    .withMessage('La descripción no puede exceder 500 caracteres')
+    .withMessage('Description cannot exceed 500 characters')
     .trim(),
   body('color')
     .optional()
     .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-    .withMessage('El color debe ser un código hexadecimal válido (ej: #FF0000)'),
+    .withMessage('Color must be a valid hexadecimal code (e.g: #FF0000)'),
   handleValidationErrors,
 ];
 
-export const validateActualizarCategoria = [
+export const validateUpdateCategory = [
   param('id')
     .isInt({ min: 1 })
-    .withMessage('El ID de la categoría debe ser un número entero positivo'),
-  body('nombre')
+    .withMessage('Category ID must be a positive integer'),
+  body('name')
     .optional()
     .isLength({ min: 1, max: 50 })
-    .withMessage('El nombre debe tener entre 1 y 50 caracteres')
+    .withMessage('Name must be between 1 and 50 characters')
     .trim(),
-  body('descripcion')
+  body('description')
     .optional()
     .isLength({ max: 500 })
-    .withMessage('La descripción no puede exceder 500 caracteres')
+    .withMessage('Description cannot exceed 500 characters')
     .trim(),
   body('color')
     .optional()
     .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-    .withMessage('El color debe ser un código hexadecimal válido (ej: #FF0000)'),
+    .withMessage('Color must be a valid hexadecimal code (e.g: #FF0000)'),
   handleValidationErrors,
 ];
 
 /**
- * Validaciones para etiquetas
+ * Tag validations
  */
-export const validateCrearEtiqueta = [
-  body('nombre')
+export const validateCreateTag = [
+  body('name')
     .isLength({ min: 1, max: 30 })
-    .withMessage('El nombre debe tener entre 1 y 30 caracteres')
+    .withMessage('Name must be between 1 and 30 characters')
     .trim()
     .matches(/^[a-zA-Z0-9\s\-_]+$/)
-    .withMessage('El nombre solo puede contener letras, números, espacios, guiones y guiones bajos'),
+    .withMessage(
+      'Name can only contain letters, numbers, spaces, hyphens and underscores'
+    ),
   body('color')
     .optional()
     .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-    .withMessage('El color debe ser un código hexadecimal válido (ej: #FF0000)'),
+    .withMessage('Color must be a valid hexadecimal code (e.g: #FF0000)'),
   handleValidationErrors,
 ];
 
-export const validateActualizarEtiqueta = [
+export const validateUpdateTag = [
   param('id')
     .isInt({ min: 1 })
-    .withMessage('El ID de la etiqueta debe ser un número entero positivo'),
-  body('nombre')
+    .withMessage('Tag ID must be a positive integer'),
+  body('name')
     .optional()
     .isLength({ min: 1, max: 30 })
-    .withMessage('El nombre debe tener entre 1 y 30 caracteres')
+    .withMessage('Name must be between 1 and 30 characters')
     .trim()
     .matches(/^[a-zA-Z0-9\s\-_]+$/)
-    .withMessage('El nombre solo puede contener letras, números, espacios, guiones y guiones bajos'),
+    .withMessage(
+      'Name can only contain letters, numbers, spaces, hyphens and underscores'
+    ),
   body('color')
     .optional()
     .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/)
-    .withMessage('El color debe ser un código hexadecimal válido (ej: #FF0000)'),
+    .withMessage('Color must be a valid hexadecimal code (e.g: #FF0000)'),
   handleValidationErrors,
 ];
 
 /**
- * Validaciones comunes
+ * Common validations
  */
 export const validateIdParam = [
-  param('id')
-    .isInt({ min: 1 })
-    .withMessage('El ID debe ser un número entero positivo'),
+  param('id').isInt({ min: 1 }).withMessage('ID must be a positive integer'),
   handleValidationErrors,
 ];
 
-export const validatePaginacion = [
+export const validatePagination = [
   query('page')
     .optional()
     .isInt({ min: 1 })
-    .withMessage('La página debe ser un número entero positivo'),
+    .withMessage('Page must be a positive integer'),
   query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
-    .withMessage('El límite debe ser un número entre 1 y 100'),
-  query('ordenar')
+    .withMessage('Limit must be a number between 1 and 100'),
+  query('sort')
     .optional()
-    .isIn(['creado_en', 'fecha_vencimiento', 'prioridad', 'titulo'])
-    .withMessage('Orden válido: creado_en, fecha_vencimiento, prioridad, titulo'),
-  query('direccion')
+    .isIn(['created_at', 'due_date', 'priority', 'title'])
+    .withMessage('Valid sort options: created_at, due_date, priority, title'),
+  query('direction')
     .optional()
     .isIn(['asc', 'desc'])
-    .withMessage('Dirección válida: asc, desc'),
+    .withMessage('Valid direction: asc, desc'),
   handleValidationErrors,
 ];
 
-export const validateFiltrosTareas = [
-  query('completada')
+export const validateTaskFilters = [
+  query('completed')
     .optional()
     .isBoolean()
-    .withMessage('El filtro completada debe ser true o false'),
-  query('categoria')
+    .withMessage('Completed filter must be true or false'),
+  query('category')
     .optional()
     .isInt({ min: 1 })
-    .withMessage('El filtro categoría debe ser un número entero positivo'),
-  query('prioridad')
+    .withMessage('Category filter must be a positive integer'),
+  query('priority')
     .optional()
-    .isIn(['baja', 'media', 'alta'])
-    .withMessage('El filtro prioridad debe ser: baja, media o alta'),
-  query('fecha_vencimiento')
+    .isIn(['low', 'medium', 'high'])
+    .withMessage('Priority filter must be: low, medium or high'),
+  query('due_date')
     .optional()
     .isISO8601()
-    .withMessage('El filtro fecha_vencimiento debe ser una fecha válida en formato ISO 8601'),
-  query('busqueda')
+    .withMessage('Due date filter must be a valid date in ISO 8601 format'),
+  query('search')
     .optional()
     .isLength({ min: 1, max: 100 })
-    .withMessage('La búsqueda debe tener entre 1 y 100 caracteres')
+    .withMessage('Search must be between 1 and 100 characters')
     .trim(),
-  query('etiquetas')
+  query('tags')
     .optional()
     .custom((value) => {
       if (typeof value === 'string') {
-        const ids = value.split(',').map(id => parseInt(id.trim()));
-        const validIds = ids.every(id => Number.isInteger(id) && id > 0);
+        const ids = value.split(',').map((id) => parseInt(id.trim()));
+        const validIds = ids.every((id) => Number.isInteger(id) && id > 0);
         if (!validIds) {
-          throw new Error('Las etiquetas deben ser una lista de IDs separados por comas');
+          throw new Error('Tags must be a comma-separated list of IDs');
         }
       }
       return true;
     }),
-  validatePaginacion,
+  validatePagination,
 ];

@@ -2,93 +2,81 @@ import { Router } from 'express';
 import * as tagsController from '../controllers/tagsController';
 import { authenticateToken } from '../middleware/auth';
 import {
-  validateCrearEtiqueta,
-  validateActualizarEtiqueta,
+  validateCreateTag,
+  validateUpdateTag,
   validateIdParam,
 } from '../middleware/validation';
 
 const router = Router();
 
-// Todas las rutas de etiquetas requieren autenticación
+// All tag routes require authentication
 router.use(authenticateToken);
 
 /**
- * @route   GET /api/etiquetas
- * @desc    Obtener todas las etiquetas del usuario
+ * @route   GET /api/tags
+ * @desc    Get all user tags
  * @access  Private
  */
-router.get('/', tagsController.obtenerEtiquetas as any);
+router.get('/', tagsController.getTags as any);
 
 /**
- * @route   GET /api/etiquetas/mas-usadas
- * @desc    Obtener las etiquetas más usadas del usuario
+ * @route   GET /api/tags/most-used
+ * @desc    Get user's most used tags
  * @access  Private
- * @query   ?limite=10
+ * @query   ?limit=10
  */
-router.get('/mas-usadas', tagsController.obtenerEtiquetasMasUsadas as any);
+router.get('/most-used', tagsController.getMostUsedTags as any);
 
 /**
- * @route   GET /api/etiquetas/:id
- * @desc    Obtener una etiqueta específica por ID
+ * @route   GET /api/tags/:id
+ * @desc    Get a specific tag by ID
+ * @access  Private
+ */
+router.get('/:id', ...validateIdParam, tagsController.getTagById as any);
+
+/**
+ * @route   GET /api/tags/:id/statistics
+ * @desc    Get tag statistics (number of tasks by status)
  * @access  Private
  */
 router.get(
-  '/:id',
+  '/:id/statistics',
   ...validateIdParam,
-  tagsController.obtenerEtiquetaPorId as any
+  tagsController.getTagStatistics as any
 );
 
 /**
- * @route   GET /api/etiquetas/:id/estadisticas
- * @desc    Obtener estadísticas de una etiqueta (número de tareas por estado)
+ * @route   POST /api/tags
+ * @desc    Create a new tag
  * @access  Private
+ * @body    { name, color? }
  */
-router.get(
-  '/:id/estadisticas',
-  ...validateIdParam,
-  tagsController.obtenerEstadisticasEtiqueta as any
-);
+router.post('/', ...validateCreateTag, tagsController.createTag as any);
 
 /**
- * @route   POST /api/etiquetas
- * @desc    Crear una nueva etiqueta
+ * @route   PUT /api/tags/:id
+ * @desc    Update a tag
  * @access  Private
- * @body    { nombre, color? }
+ * @body    { name?, color? }
  */
-router.post('/', ...validateCrearEtiqueta, tagsController.crearEtiqueta as any);
+router.put('/:id', ...validateUpdateTag, tagsController.updateTag as any);
 
 /**
- * @route   PUT /api/etiquetas/:id
- * @desc    Actualizar una etiqueta
+ * @route   DELETE /api/tags/:id
+ * @desc    Delete a tag (only if it has no associated tasks)
  * @access  Private
- * @body    { nombre?, color? }
  */
-router.put(
-  '/:id',
-  ...validateActualizarEtiqueta,
-  tagsController.actualizarEtiqueta as any
-);
+router.delete('/:id', ...validateIdParam, tagsController.deleteTag as any);
 
 /**
- * @route   DELETE /api/etiquetas/:id
- * @desc    Eliminar una etiqueta (solo si no tiene tareas asociadas)
+ * @route   DELETE /api/tags/:id/force
+ * @desc    Delete a tag forcefully (removing associations with tasks)
  * @access  Private
  */
 router.delete(
-  '/:id',
+  '/:id/force',
   ...validateIdParam,
-  tagsController.eliminarEtiqueta as any
-);
-
-/**
- * @route   DELETE /api/etiquetas/:id/forzar
- * @desc    Eliminar una etiqueta forzadamente (removiendo asociaciones con tareas)
- * @access  Private
- */
-router.delete(
-  '/:id/forzar',
-  ...validateIdParam,
-  tagsController.eliminarEtiquetaForzar as any
+  tagsController.forceDeleteTag as any
 );
 
 export default router;
