@@ -17,9 +17,9 @@ import { HealthStatus } from './types';
 
 // Import routes (will be created in next phase)
 import authRoutes from './routes/auth';
-// import tareasRoutes from './routes/tareas';
-// import categoriasRoutes from './routes/categorias';
-// import etiquetasRoutes from './routes/etiquetas';
+import tareasRoutes from './routes/tareas';
+import categoriasRoutes from './routes/categorias';
+import etiquetasRoutes from './routes/etiquetas';
 
 const config = appConfig;
 
@@ -148,9 +148,9 @@ app.get('/api', (req: Request, res: Response): void => {
 
 // API Routes will be added here in Phase 3
 app.use('/api/auth', authRoutes);
-// app.use('/api/tareas', tareasRoutes);
-// app.use('/api/categorias', categoriasRoutes);
-// app.use('/api/etiquetas', etiquetasRoutes);
+app.use('/api/tareas', tareasRoutes);
+app.use('/api/categorias', categoriasRoutes);
+app.use('/api/etiquetas', etiquetasRoutes);
 
 /**
  * 404 Handler
