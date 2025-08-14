@@ -34,6 +34,13 @@ const validateToggleCompletar = [
 router.get('/', ...validateFiltrosTareas, tareasController.obtenerTareas as any);
 
 /**
+ * @route   GET /api/tareas/estadisticas
+ * @desc    Obtener estadísticas de las tareas del usuario
+ * @access  Private
+ */
+router.get('/estadisticas', tareasController.obtenerEstadisticasTareas as any);
+
+/**
  * @route   GET /api/tareas/:id
  * @desc    Obtener una tarea específica por ID
  * @access  Private

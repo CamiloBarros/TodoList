@@ -612,3 +612,140 @@ export const eliminarTarea = async (
     };
   }
 };
+
+/**
+ * Obtiene estadísticas de las tareas del usuario
+ */
+export const obtenerEstadisticasTareas = async (
+  usuarioId: number
+): Promise<ApiResponse<any>> => {
+  try {
+    // Estadísticas generales
+    const estadisticasGenerales = await query(`
+      SELECT 
+        COUNT(*) as total_tareas,
+        COUNT(CASE WHEN completada = true THEN 1 END) as tareas_completadas,
+        COUNT(CASE WHEN completada = false THEN 1 END) as tareas_pendientes,
+        COUNT(CASE WHEN fecha_vencimiento < NOW() AND completada = false THEN 1 END) as tareas_vencidas,
+        COUNT(CASE WHEN fecha_vencimiento >= NOW() AND fecha_vencimiento <= NOW() + INTERVAL '7 days' AND completada = false THEN 1 END) as tareas_proximas
+      FROM tareas 
+      WHERE usuario_id = $1
+    `, [usuarioId]);
+
+    // Estadísticas por prioridad
+    const estadisticasPrioridad = await query(`
+      SELECT 
+        prioridad,
+        COUNT(*) as total,
+        COUNT(CASE WHEN completada = true THEN 1 END) as completadas,
+        COUNT(CASE WHEN completada = false THEN 1 END) as pendientes
+      FROM tareas 
+      WHERE usuario_id = $1
+      GROUP BY prioridad
+      ORDER BY 
+        CASE prioridad 
+          WHEN 'alta' THEN 1 
+          WHEN 'media' THEN 2 
+          WHEN 'baja' THEN 3 
+        END
+    `, [usuarioId]);
+
+    // Estadísticas por categoría
+    const estadisticasCategorias = await query(`
+      SELECT 
+        c.id as categoria_id,
+        c.nombre as categoria_nombre,
+        c.color as categoria_color,
+        COUNT(t.id) as total_tareas,
+        COUNT(CASE WHEN t.completada = true THEN 1 END) as tareas_completadas,
+        COUNT(CASE WHEN t.completada = false THEN 1 END) as tareas_pendientes
+      FROM categorias c
+      LEFT JOIN tareas t ON c.id = t.categoria_id AND t.usuario_id = $1
+      WHERE c.usuario_id = $1
+      GROUP BY c.id, c.nombre, c.color
+      ORDER BY total_tareas DESC
+    `, [usuarioId]);
+
+    // Productividad reciente (últimos 7 días)
+    const productividad = await query(`
+      SELECT 
+        DATE(completada_en) as fecha,
+        COUNT(*) as tareas_completadas
+      FROM tareas 
+      WHERE usuario_id = $1 
+        AND completada = true 
+        AND completada_en >= NOW() - INTERVAL '7 days'
+      GROUP BY DATE(completada_en)
+      ORDER BY fecha DESC
+    `, [usuarioId]);
+
+    // Estadísticas de etiquetas más usadas
+    const etiquetasPopulares = await query(`
+      SELECT 
+        e.id,
+        e.nombre,
+        e.color,
+        COUNT(te.tarea_id) as uso_count
+      FROM etiquetas e
+      INNER JOIN tarea_etiquetas te ON e.id = te.etiqueta_id
+      INNER JOIN tareas t ON te.tarea_id = t.id
+      WHERE e.usuario_id = $1 AND t.usuario_id = $1
+      GROUP BY e.id, e.nombre, e.color
+      ORDER BY uso_count DESC
+      LIMIT 10
+    `, [usuarioId]);
+
+    // Calcular porcentajes
+    const totales = estadisticasGenerales.rows[0];
+    const totalTareas = parseInt(totales.total_tareas);
+    const porcentajeCompletadas = totalTareas > 0 ? Math.round((parseInt(totales.tareas_completadas) / totalTareas) * 100) : 0;
+
+    const estadisticas = {
+      resumen: {
+        total_tareas: parseInt(totales.total_tareas),
+        tareas_completadas: parseInt(totales.tareas_completadas),
+        tareas_pendientes: parseInt(totales.tareas_pendientes),
+        tareas_vencidas: parseInt(totales.tareas_vencidas),
+        tareas_proximas: parseInt(totales.tareas_proximas),
+        porcentaje_completadas: porcentajeCompletadas
+      },
+      por_prioridad: estadisticasPrioridad.rows.map(row => ({
+        prioridad: row.prioridad,
+        total: parseInt(row.total),
+        completadas: parseInt(row.completadas),
+        pendientes: parseInt(row.pendientes),
+        porcentaje_completadas: parseInt(row.total) > 0 ? Math.round((parseInt(row.completadas) / parseInt(row.total)) * 100) : 0
+      })),
+      por_categoria: estadisticasCategorias.rows.map(row => ({
+        categoria_id: row.categoria_id,
+        categoria_nombre: row.categoria_nombre,
+        categoria_color: row.categoria_color,
+        total_tareas: parseInt(row.total_tareas),
+        tareas_completadas: parseInt(row.tareas_completadas),
+        tareas_pendientes: parseInt(row.tareas_pendientes),
+        porcentaje_completadas: parseInt(row.total_tareas) > 0 ? Math.round((parseInt(row.tareas_completadas) / parseInt(row.total_tareas)) * 100) : 0
+      })),
+      productividad_reciente: productividad.rows.map(row => ({
+        fecha: row.fecha,
+        tareas_completadas: parseInt(row.tareas_completadas)
+      })),
+      etiquetas_populares: etiquetasPopulares.rows.map(row => ({
+        id: row.id,
+        nombre: row.nombre,
+        color: row.color,
+        uso_count: parseInt(row.uso_count)
+      }))
+    };
+
+    return {
+      success: true,
+      data: estadisticas,
+    };
+  } catch (error) {
+    console.error('Error obteniendo estadísticas de tareas:', error);
+    return {
+      success: false,
+      error: 'Error interno del servidor',
+    };
+  }
+};

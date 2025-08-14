@@ -360,3 +360,41 @@ export const toggleCompletarTarea = async (req: AuthenticatedRequest, res: Respo
     });
   }
 };
+
+/**
+ * GET /api/tareas/estadisticas
+ * Obtiene estadísticas de las tareas del usuario
+ */
+export const obtenerEstadisticasTareas = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const resultado = await tareasService.obtenerEstadisticasTareas(req.user.id);
+
+    if (resultado.success) {
+      res.status(200).json({
+        success: true,
+        data: resultado.data,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: {
+          message: resultado.error,
+          type: 'INTERNAL_SERVER_ERROR',
+          statusCode: 500,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Error en obtener estadísticas de tareas controller:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Error interno del servidor',
+        type: 'INTERNAL_SERVER_ERROR',
+        statusCode: 500,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+};
