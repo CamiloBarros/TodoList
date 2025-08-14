@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS etiquetas (
     nombre VARCHAR(50) NOT NULL,
     color VARCHAR(7) DEFAULT '#6B7280',
     creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     
     -- Foreign Key Constraints
     CONSTRAINT fk_etiquetas_usuario 
@@ -32,11 +33,28 @@ CREATE INDEX IF NOT EXISTS idx_etiquetas_usuario_id ON etiquetas(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_etiquetas_nombre ON etiquetas(nombre);
 CREATE INDEX IF NOT EXISTS idx_etiquetas_creado_en ON etiquetas(creado_en);
 
+-- Create function to update actualizado_en timestamp
+CREATE OR REPLACE FUNCTION actualizar_timestamp()
+    RETURNS TRIGGER AS $$
+BEGIN
+    NEW.actualizado_en = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to automatically update actualizado_en
+CREATE TRIGGER IF NOT EXISTS trigger_etiquetas_actualizado_en
+    BEFORE UPDATE ON etiquetas
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_timestamp();
+
 -- Add comments for documentation
 COMMENT ON TABLE etiquetas IS 'User-defined tags for flexible task categorization';
 COMMENT ON COLUMN etiquetas.id IS 'Primary key, auto-incrementing tag ID';
 COMMENT ON COLUMN etiquetas.usuario_id IS 'Foreign key to usuarios table';
 COMMENT ON COLUMN etiquetas.nombre IS 'Tag name, unique per user';
 COMMENT ON COLUMN etiquetas.color IS 'Hex color code for visual identification';
+COMMENT ON COLUMN etiquetas.creado_en IS 'Timestamp when the tag was created';
+COMMENT ON COLUMN etiquetas.actualizado_en IS 'Timestamp when the tag was last updated';
 
 COMMIT;
