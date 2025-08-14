@@ -16,7 +16,7 @@ import { notFoundHandler } from './middleware/notFoundHandler';
 import { HealthStatus } from './types';
 
 // Import routes (will be created in next phase)
-// import authRoutes from './routes/auth';
+import authRoutes from './routes/auth';
 // import tareasRoutes from './routes/tareas';
 // import categoriasRoutes from './routes/categorias';
 // import etiquetasRoutes from './routes/etiquetas';
@@ -38,24 +38,28 @@ if (config.NODE_ENV === 'production') {
 /**
  * Security Middleware
  */
-app.use(helmet({
-  contentSecurityPolicy: config.helmet.contentSecurityPolicy,
-  hsts: {
-    maxAge: config.helmet.hstsMaxAge,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: config.helmet.contentSecurityPolicy,
+    hsts: {
+      maxAge: config.helmet.hstsMaxAge,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
 
 /**
  * CORS Configuration
  */
-app.use(cors({
-  origin: config.cors.origin,
-  methods: config.cors.methods,
-  allowedHeaders: config.cors.allowedHeaders,
-  credentials: config.cors.credentials
-}));
+app.use(
+  cors({
+    origin: config.cors.origin,
+    methods: config.cors.methods,
+    allowedHeaders: config.cors.allowedHeaders,
+    credentials: config.cors.credentials,
+  })
+);
 
 /**
  * Rate Limiting
@@ -65,7 +69,8 @@ const limiter = rateLimit({
   max: config.security.rateLimitMaxRequests,
   message: {
     error: config.security.rateLimitMessage,
-    retryAfter: Math.ceil(config.security.rateLimitWindowMs / 1000 / 60) + ' minutes'
+    retryAfter:
+      Math.ceil(config.security.rateLimitWindowMs / 1000 / 60) + ' minutes',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -104,9 +109,13 @@ app.get('/health', async (req: Request, res: Response): Promise<void> => {
       version: process.env.npm_package_version || '1.0.0',
       uptime: Math.floor(process.uptime()),
       memory: {
-        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100,
-        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024 * 100) / 100
-      }
+        used:
+          Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) /
+          100,
+        total:
+          Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) /
+          100,
+      },
     };
 
     res.status(200).json(healthStatus);
@@ -114,7 +123,7 @@ app.get('/health', async (req: Request, res: Response): Promise<void> => {
     res.status(503).json({
       status: 'ERROR',
       message: 'Service temporarily unavailable',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -131,14 +140,14 @@ app.get('/api', (req: Request, res: Response): void => {
       auth: '/api/auth',
       tareas: '/api/tareas',
       categorias: '/api/categorias',
-      etiquetas: '/api/etiquetas'
+      etiquetas: '/api/etiquetas',
     },
-    documentation: '/api/docs'
+    documentation: '/api/docs',
   });
 });
 
 // API Routes will be added here in Phase 3
-// app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 // app.use('/api/tareas', tareasRoutes);
 // app.use('/api/categorias', categoriasRoutes);
 // app.use('/api/etiquetas', etiquetasRoutes);
@@ -158,11 +167,11 @@ app.use(errorHandler);
  */
 const gracefulShutdown = async (signal: string): Promise<void> => {
   console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
-  
+
   try {
     // Close database connections
     await closeDatabases();
-    
+
     console.log('✅ Graceful shutdown completed');
     process.exit(0);
   } catch (error) {
@@ -198,17 +207,19 @@ export const startServer = async (): Promise<Server> => {
   try {
     // Print configuration summary
     printConfigSummary();
-    
+
     // Initialize database connections
     await initializeDatabases();
-    
+
     // Start HTTP server
     const server = app.listen(config.PORT, () => {
-      console.log(`🚀 Server running on port ${config.PORT} in ${config.NODE_ENV} mode`);
+      console.log(
+        `🚀 Server running on port ${config.PORT} in ${config.NODE_ENV} mode`
+      );
       console.log(`📊 Health check: http://localhost:${config.PORT}/health`);
       console.log(`🔗 API Base URL: http://localhost:${config.PORT}/api`);
     });
-    
+
     // Handle server errors
     server.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
@@ -218,7 +229,7 @@ export const startServer = async (): Promise<Server> => {
       }
       process.exit(1);
     });
-    
+
     return server;
   } catch (error) {
     console.error('❌ Failed to start server:', error);
