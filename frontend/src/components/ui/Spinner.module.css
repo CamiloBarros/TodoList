@@ -1,0 +1,89 @@
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+/* Tamaños */
+.sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.md {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+
+.lg {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+.xl {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+/* Colores */
+.primary {
+  border-top-color: var(--color-primary);
+}
+
+.secondary {
+  border-top-color: var(--color-secondary);
+}
+
+.success {
+  border-top-color: var(--color-success);
+}
+
+.danger {
+  border-top-color: var(--color-danger);
+}
+
+.warning {
+  border-top-color: var(--color-warning);
+}
+
+/* Contenedor centrado */
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.containerFullscreen {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  z-index: var(--z-modal);
+}
+
+/* Spinner con texto */
+.withText {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
