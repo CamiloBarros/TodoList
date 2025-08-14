@@ -1,9 +1,9 @@
-import { query, transaction } from '../config/database';
+﻿import { query, transaction } from '../config/database';
 import { 
-  Tarea, 
-  TareaCreacion, 
-  TareaActualizacion,
-  FiltrosTareas,
+  Task, 
+  TaskCreation, 
+  TaskUpdate,
+  TaskFilters,
   ResultadoPaginado,
   ApiResponse,
   Prioridad 
@@ -16,16 +16,16 @@ import appConfig from '../config/env';
  */
 
 /**
- * Obtiene todas las tareas del usuario con filtros y paginación
+ * Obtiene todas las tareas del User con filtros y paginación
  */
 export const obtenerTareas = async (
   usuarioId: number,
-  filtros: FiltrosTareas = {}
-): Promise<ApiResponse<ResultadoPaginado<Tarea>>> => {
+  filtros: TaskFilters = {}
+): Promise<ApiResponse<ResultadoPaginado<Task>>> => {
   try {
     const {
       completada,
-      categoria,
+      Category,
       prioridad,
       fecha_vencimiento,
       busqueda,
@@ -71,9 +71,9 @@ export const obtenerTareas = async (
       paramCounter++;
     }
 
-    if (categoria) {
+    if (Category) {
       queryText += ` AND t.categoria_id = $${paramCounter}`;
-      params.push(categoria);
+      params.push(Category);
       paramCounter++;
     }
 
@@ -106,7 +106,7 @@ export const obtenerTareas = async (
       paramCounter++;
     }
 
-    // Agrupar por tarea
+    // Agrupar por Task
     queryText += ` GROUP BY t.id, c.nombre, c.color`;
 
     // Ordenamiento
@@ -153,9 +153,9 @@ export const obtenerTareas = async (
       countParamCounter++;
     }
 
-    if (categoria) {
+    if (Category) {
       countQuery += ` AND t.categoria_id = $${countParamCounter}`;
-      countParams.push(categoria);
+      countParams.push(Category);
       countParamCounter++;
     }
 
@@ -192,7 +192,7 @@ export const obtenerTareas = async (
     const total = parseInt(countResult.rows[0].total);
 
     // Procesar resultados
-    const tareas: Tarea[] = resultado.rows.map(row => ({
+    const tareas: Task[] = resultado.rows.map(row => ({
       id: row.id,
       usuario_id: row.usuario_id,
       categoria_id: row.categoria_id,
@@ -204,7 +204,7 @@ export const obtenerTareas = async (
       completada_en: row.completada_en,
       creado_en: row.creado_en,
       actualizado_en: row.actualizado_en,
-      categoria: row.categoria_id ? {
+      Category: row.categoria_id ? {
         id: row.categoria_id,
         usuario_id: row.usuario_id,
         nombre: row.categoria_nombre,
@@ -241,12 +241,12 @@ export const obtenerTareas = async (
 };
 
 /**
- * Obtiene una tarea específica por ID
+ * Obtiene una Task específica por ID
  */
 export const obtenerTareaPorId = async (
   tareaId: number,
   usuarioId: number
-): Promise<ApiResponse<Tarea>> => {
+): Promise<ApiResponse<Task>> => {
   try {
     const queryText = `
       SELECT 
@@ -274,12 +274,12 @@ export const obtenerTareaPorId = async (
     if (resultado.rows.length === 0) {
       return {
         success: false,
-        error: 'Tarea no encontrada',
+        error: 'Task no encontrada',
       };
     }
 
     const row = resultado.rows[0];
-    const tarea: Tarea = {
+    const Task: Task = {
       id: row.id,
       usuario_id: row.usuario_id,
       categoria_id: row.categoria_id,
@@ -291,7 +291,7 @@ export const obtenerTareaPorId = async (
       completada_en: row.completada_en,
       creado_en: row.creado_en,
       actualizado_en: row.actualizado_en,
-      categoria: row.categoria_id ? {
+      Category: row.categoria_id ? {
         id: row.categoria_id,
         usuario_id: row.usuario_id,
         nombre: row.categoria_nombre,
@@ -304,10 +304,10 @@ export const obtenerTareaPorId = async (
 
     return {
       success: true,
-      data: tarea,
+      data: Task,
     };
   } catch (error) {
-    console.error('Error obteniendo tarea por ID:', error);
+    console.error('Error obteniendo Task por ID:', error);
     return {
       success: false,
       error: 'Error interno del servidor',
@@ -316,14 +316,14 @@ export const obtenerTareaPorId = async (
 };
 
 /**
- * Crea una nueva tarea
+ * Crea una nueva Task
  */
 export const crearTarea = async (
   usuarioId: number,
-  datosTarea: TareaCreacion
-): Promise<ApiResponse<Tarea>> => {
+  datosTarea: TaskCreation
+): Promise<ApiResponse<Task>> => {
   try {
-    // Validar que la categoría pertenezca al usuario (si se especifica)
+    // Validar que la categoría pertenezca al User (si se especifica)
     if (datosTarea.categoria_id) {
       const categoriaResult = await query(
         'SELECT id FROM categorias WHERE id = $1 AND usuario_id = $2',
@@ -333,12 +333,12 @@ export const crearTarea = async (
       if (categoriaResult.rows.length === 0) {
         return {
           success: false,
-          error: 'Categoría no encontrada o no pertenece al usuario',
+          error: 'Categoría no encontrada o no pertenece al User',
         };
       }
     }
 
-    // Validar que las etiquetas pertenezcan al usuario (si se especifican)
+    // Validar que las etiquetas pertenezcan al User (si se especifican)
     if (datosTarea.etiquetas && datosTarea.etiquetas.length > 0) {
       const etiquetasResult = await query(
         'SELECT id FROM etiquetas WHERE id = ANY($1) AND usuario_id = $2',
@@ -348,13 +348,13 @@ export const crearTarea = async (
       if (etiquetasResult.rows.length !== datosTarea.etiquetas.length) {
         return {
           success: false,
-          error: 'Una o más etiquetas no pertenecen al usuario',
+          error: 'Una o más etiquetas no pertenecen al User',
         };
       }
     }
 
     const resultado = await transaction(async (client) => {
-      // Crear la tarea
+      // Crear la Task
       const insertResult = await client.query(
         `INSERT INTO tareas (
           usuario_id, categoria_id, titulo, descripcion, prioridad, fecha_vencimiento
@@ -385,20 +385,20 @@ export const crearTarea = async (
       return nuevaTarea;
     });
 
-    // Obtener la tarea completa con relaciones
+    // Obtener la Task completa con relaciones
     const tareaCompleta = await obtenerTareaPorId(resultado.id, usuarioId);
 
     if (tareaCompleta.success) {
       return {
         success: true,
         data: tareaCompleta.data!,
-        message: 'Tarea creada exitosamente',
+        message: 'Task creada exitosamente',
       };
     } else {
       return tareaCompleta;
     }
   } catch (error) {
-    console.error('Error creando tarea:', error);
+    console.error('Error creando Task:', error);
     return {
       success: false,
       error: 'Error interno del servidor',
@@ -407,15 +407,15 @@ export const crearTarea = async (
 };
 
 /**
- * Actualiza una tarea existente
+ * Actualiza una Task existente
  */
 export const actualizarTarea = async (
   tareaId: number,
   usuarioId: number,
-  datosActualizacion: TareaActualizacion
-): Promise<ApiResponse<Tarea>> => {
+  datosActualizacion: TaskUpdate
+): Promise<ApiResponse<Task>> => {
   try {
-    // Verificar que la tarea existe y pertenece al usuario
+    // Verificar que la Task existe y pertenece al User
     const tareaExiste = await query(
       'SELECT id FROM tareas WHERE id = $1 AND usuario_id = $2',
       [tareaId, usuarioId]
@@ -424,7 +424,7 @@ export const actualizarTarea = async (
     if (tareaExiste.rows.length === 0) {
       return {
         success: false,
-        error: 'Tarea no encontrada',
+        error: 'Task no encontrada',
       };
     }
 
@@ -438,7 +438,7 @@ export const actualizarTarea = async (
       if (categoriaResult.rows.length === 0) {
         return {
           success: false,
-          error: 'Categoría no encontrada o no pertenece al usuario',
+          error: 'Categoría no encontrada o no pertenece al User',
         };
       }
     }
@@ -453,7 +453,7 @@ export const actualizarTarea = async (
       if (etiquetasResult.rows.length !== datosActualizacion.etiquetas.length) {
         return {
           success: false,
-          error: 'Una o más etiquetas no pertenecen al usuario',
+          error: 'Una o más etiquetas no pertenecen al User',
         };
       }
     }
@@ -511,7 +511,7 @@ export const actualizarTarea = async (
         throw new Error('No hay datos para actualizar');
       }
 
-      // Actualizar la tarea si hay campos para actualizar
+      // Actualizar la Task si hay campos para actualizar
       if (camposActualizar.length > 0) {
         camposActualizar.push(`actualizado_en = CURRENT_TIMESTAMP`);
         valores.push(tareaId, usuarioId);
@@ -548,20 +548,20 @@ export const actualizarTarea = async (
       return true;
     });
 
-    // Obtener la tarea actualizada
+    // Obtener la Task actualizada
     const tareaActualizada = await obtenerTareaPorId(tareaId, usuarioId);
 
     if (tareaActualizada.success) {
       return {
         success: true,
         data: tareaActualizada.data!,
-        message: 'Tarea actualizada exitosamente',
+        message: 'Task actualizada exitosamente',
       };
     } else {
       return tareaActualizada;
     }
   } catch (error) {
-    console.error('Error actualizando tarea:', error);
+    console.error('Error actualizando Task:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error interno del servidor',
@@ -570,7 +570,7 @@ export const actualizarTarea = async (
 };
 
 /**
- * Elimina una tarea
+ * Elimina una Task
  */
 export const eliminarTarea = async (
   tareaId: number,
@@ -584,7 +584,7 @@ export const eliminarTarea = async (
         [tareaId]
       );
 
-      // Eliminar la tarea
+      // Eliminar la Task
       const deleteResult = await client.query(
         'DELETE FROM tareas WHERE id = $1 AND usuario_id = $2',
         [tareaId, usuarioId]
@@ -596,16 +596,16 @@ export const eliminarTarea = async (
     if (resultado === 0) {
       return {
         success: false,
-        error: 'Tarea no encontrada',
+        error: 'Task no encontrada',
       };
     }
 
     return {
       success: true,
-      message: 'Tarea eliminada exitosamente',
+      message: 'Task eliminada exitosamente',
     };
   } catch (error) {
-    console.error('Error eliminando tarea:', error);
+    console.error('Error eliminando Task:', error);
     return {
       success: false,
       error: 'Error interno del servidor',
@@ -614,7 +614,7 @@ export const eliminarTarea = async (
 };
 
 /**
- * Obtiene estadísticas de las tareas del usuario
+ * Obtiene estadísticas de las tareas del User
  */
 export const obtenerEstadisticasTareas = async (
   usuarioId: number

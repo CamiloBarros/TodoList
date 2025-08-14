@@ -1,15 +1,15 @@
-import { pool } from '../config/database';
+﻿import { pool } from '../config/database';
 import { 
-  Etiqueta, 
-  CrearEtiquetaDTO, 
-  ActualizarEtiquetaDTO,
+  Tag, 
+  CreateTagDTO, 
+  UpdateTagDTO,
   EstadisticasEtiqueta,
   ErrorCode,
   DatabaseError 
 } from '../types';
 
 /**
- * Genera un color aleatorio para la etiqueta si no se proporciona
+ * Genera un color aleatorio para la Tag si no se proporciona
  */
 const generarColorAleatorio = (): string => {
   const colores = [
@@ -22,9 +22,9 @@ const generarColorAleatorio = (): string => {
 };
 
 /**
- * Obtener todas las etiquetas del usuario
+ * Obtener todas las etiquetas del User
  */
-export const obtenerEtiquetas = async (usuarioId: number): Promise<Etiqueta[]> => {
+export const obtenerEtiquetas = async (usuarioId: number): Promise<Tag[]> => {
   const client = await pool.connect();
   
   try {
@@ -64,12 +64,12 @@ export const obtenerEtiquetas = async (usuarioId: number): Promise<Etiqueta[]> =
 };
 
 /**
- * Obtener una etiqueta específica por ID
+ * Obtener una Tag específica por ID
  */
 export const obtenerEtiquetaPorId = async (
   etiquetaId: number, 
   usuarioId: number
-): Promise<Etiqueta | null> => {
+): Promise<Tag | null> => {
   const client = await pool.connect();
   
   try {
@@ -103,7 +103,7 @@ export const obtenerEtiquetaPorId = async (
     };
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al obtener etiqueta',
+      'Error al obtener Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -113,7 +113,7 @@ export const obtenerEtiquetaPorId = async (
 };
 
 /**
- * Verificar si una etiqueta con el mismo nombre ya existe para el usuario
+ * Verificar si una Tag con el mismo nombre ya existe para el User
  */
 export const existeEtiquetaConNombre = async (
   nombre: string, 
@@ -138,7 +138,7 @@ export const existeEtiquetaConNombre = async (
     return result.rows.length > 0;
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al verificar existencia de etiqueta',
+      'Error al verificar existencia de Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -148,31 +148,31 @@ export const existeEtiquetaConNombre = async (
 };
 
 /**
- * Crear una nueva etiqueta
+ * Crear una nueva Tag
  */
 export const crearEtiqueta = async (
-  etiquetaData: CrearEtiquetaDTO, 
+  etiquetaData: CreateTagDTO, 
   usuarioId: number
-): Promise<Etiqueta> => {
+): Promise<Tag> => {
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
 
-    // Verificar que no exista una etiqueta con el mismo nombre
+    // Verificar que no exista una Tag con el mismo nombre
     const existeNombre = await existeEtiquetaConNombre(etiquetaData.nombre, usuarioId);
     if (existeNombre) {
       throw new DatabaseError(
-        'Ya existe una etiqueta con ese nombre',
+        'Ya existe una Tag con ese nombre',
         ErrorCode.VALIDATION_ERROR,
-        `La etiqueta "${etiquetaData.nombre}" ya existe`
+        `La Tag "${etiquetaData.nombre}" ya existe`
       );
     }
 
     // Generar color si no se proporciona
     const color = etiquetaData.color || generarColorAleatorio();
 
-    // Crear la etiqueta
+    // Crear la Tag
     const result = await client.query(`
       INSERT INTO etiquetas (nombre, color, usuario_id)
       VALUES ($1, $2, $3)
@@ -199,7 +199,7 @@ export const crearEtiqueta = async (
     }
     
     throw new DatabaseError(
-      'Error al crear etiqueta',
+      'Error al crear Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -209,19 +209,19 @@ export const crearEtiqueta = async (
 };
 
 /**
- * Actualizar una etiqueta existente
+ * Actualizar una Tag existente
  */
 export const actualizarEtiqueta = async (
   etiquetaId: number,
-  etiquetaData: ActualizarEtiquetaDTO,
+  etiquetaData: UpdateTagDTO,
   usuarioId: number
-): Promise<Etiqueta | null> => {
+): Promise<Tag | null> => {
   const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
 
-    // Verificar que la etiqueta existe y pertenece al usuario
+    // Verificar que la Tag existe y pertenece al User
     const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
     if (!etiquetaExistente) {
       return null;
@@ -236,9 +236,9 @@ export const actualizarEtiqueta = async (
       );
       if (existeNombre) {
         throw new DatabaseError(
-          'Ya existe una etiqueta con ese nombre',
+          'Ya existe una Tag con ese nombre',
           ErrorCode.VALIDATION_ERROR,
-          `La etiqueta "${etiquetaData.nombre}" ya existe`
+          `La Tag "${etiquetaData.nombre}" ya existe`
         );
       }
     }
@@ -261,7 +261,7 @@ export const actualizarEtiqueta = async (
     }
 
     if (camposActualizar.length === 0) {
-      // No hay campos para actualizar, devolver la etiqueta existente
+      // No hay campos para actualizar, devolver la Tag existente
       await client.query('COMMIT');
       return etiquetaExistente;
     }
@@ -302,7 +302,7 @@ export const actualizarEtiqueta = async (
     }
     
     throw new DatabaseError(
-      'Error al actualizar etiqueta',
+      'Error al actualizar Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -312,7 +312,7 @@ export const actualizarEtiqueta = async (
 };
 
 /**
- * Verificar si una etiqueta tiene tareas asociadas
+ * Verificar si una Tag tiene tareas asociadas
  */
 export const tieneEtiquetaTareasAsociadas = async (
   etiquetaId: number, 
@@ -331,7 +331,7 @@ export const tieneEtiquetaTareasAsociadas = async (
     return parseInt(result.rows[0].count) > 0;
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al verificar asociaciones de etiqueta',
+      'Error al verificar asociaciones de Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -341,7 +341,7 @@ export const tieneEtiquetaTareasAsociadas = async (
 };
 
 /**
- * Eliminar una etiqueta (solo si no tiene tareas asociadas)
+ * Eliminar una Tag (solo si no tiene tareas asociadas)
  */
 export const eliminarEtiqueta = async (
   etiquetaId: number, 
@@ -352,12 +352,12 @@ export const eliminarEtiqueta = async (
   try {
     await client.query('BEGIN');
 
-    // Verificar que la etiqueta existe y pertenece al usuario
+    // Verificar que la Tag existe y pertenece al User
     const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
     if (!etiquetaExistente) {
       return {
         eliminada: false,
-        mensaje: 'Etiqueta no encontrada'
+        mensaje: 'Tag no encontrada'
       };
     }
 
@@ -366,11 +366,11 @@ export const eliminarEtiqueta = async (
     if (tieneAsociaciones) {
       return {
         eliminada: false,
-        mensaje: 'No se puede eliminar la etiqueta porque tiene tareas asociadas. Use la eliminación forzada si desea continuar.'
+        mensaje: 'No se puede eliminar la Tag porque tiene tareas asociadas. Use la eliminación forzada si desea continuar.'
       };
     }
 
-    // Eliminar la etiqueta
+    // Eliminar la Tag
     await client.query(`
       DELETE FROM etiquetas 
       WHERE id = $1 AND usuario_id = $2
@@ -380,13 +380,13 @@ export const eliminarEtiqueta = async (
 
     return {
       eliminada: true,
-      mensaje: 'Etiqueta eliminada exitosamente'
+      mensaje: 'Tag eliminada exitosamente'
     };
   } catch (error: any) {
     await client.query('ROLLBACK');
     
     throw new DatabaseError(
-      'Error al eliminar etiqueta',
+      'Error al eliminar Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -396,7 +396,7 @@ export const eliminarEtiqueta = async (
 };
 
 /**
- * Eliminar una etiqueta forzadamente (eliminando también sus asociaciones)
+ * Eliminar una Tag forzadamente (eliminando también sus asociaciones)
  */
 export const eliminarEtiquetaForzar = async (
   etiquetaId: number, 
@@ -407,12 +407,12 @@ export const eliminarEtiquetaForzar = async (
   try {
     await client.query('BEGIN');
 
-    // Verificar que la etiqueta existe y pertenece al usuario
+    // Verificar que la Tag existe y pertenece al User
     const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
     if (!etiquetaExistente) {
       return {
         eliminada: false,
-        mensaje: 'Etiqueta no encontrada'
+        mensaje: 'Tag no encontrada'
       };
     }
 
@@ -434,7 +434,7 @@ export const eliminarEtiquetaForzar = async (
       )
     `, [etiquetaId, usuarioId]);
 
-    // Eliminar la etiqueta
+    // Eliminar la Tag
     await client.query(`
       DELETE FROM etiquetas 
       WHERE id = $1 AND usuario_id = $2
@@ -444,14 +444,14 @@ export const eliminarEtiquetaForzar = async (
 
     return {
       eliminada: true,
-      mensaje: `Etiqueta eliminada exitosamente. Se removió de ${tareasAfectadas} tarea(s).`,
+      mensaje: `Tag eliminada exitosamente. Se removió de ${tareasAfectadas} Task(s).`,
       tareasAfectadas
     };
   } catch (error: any) {
     await client.query('ROLLBACK');
     
     throw new DatabaseError(
-      'Error al eliminar etiqueta forzadamente',
+      'Error al eliminar Tag forzadamente',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -461,7 +461,7 @@ export const eliminarEtiquetaForzar = async (
 };
 
 /**
- * Obtener estadísticas de una etiqueta
+ * Obtener estadísticas de una Tag
  */
 export const obtenerEstadisticasEtiqueta = async (
   etiquetaId: number, 
@@ -470,7 +470,7 @@ export const obtenerEstadisticasEtiqueta = async (
   const client = await pool.connect();
   
   try {
-    // Verificar que la etiqueta existe y pertenece al usuario
+    // Verificar que la Tag existe y pertenece al User
     const etiquetaExistente = await obtenerEtiquetaPorId(etiquetaId, usuarioId);
     if (!etiquetaExistente) {
       return null;
@@ -512,7 +512,7 @@ export const obtenerEstadisticasEtiqueta = async (
     };
   } catch (error: any) {
     throw new DatabaseError(
-      'Error al obtener estadísticas de etiqueta',
+      'Error al obtener estadísticas de Tag',
       ErrorCode.DATABASE_ERROR,
       error.message
     );
@@ -522,12 +522,12 @@ export const obtenerEstadisticasEtiqueta = async (
 };
 
 /**
- * Obtener etiquetas más usadas del usuario
+ * Obtener etiquetas más usadas del User
  */
 export const obtenerEtiquetasMasUsadas = async (
   usuarioId: number, 
   limite: number = 10
-): Promise<Etiqueta[]> => {
+): Promise<Tag[]> => {
   const client = await pool.connect();
   
   try {

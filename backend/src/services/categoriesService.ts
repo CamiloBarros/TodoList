@@ -1,21 +1,21 @@
-import { query, transaction } from '../config/database';
+﻿import { query, transaction } from '../config/database';
 import { 
-  Categoria, 
-  CategoriaCreacion,
+  Category, 
+  CategoryCreation,
   ApiResponse 
 } from '../types';
 
 /**
  * Servicio de Categorías
- * Maneja todas las operaciones CRUD para las categorías de usuario
+ * Maneja todas las operaciones CRUD para las categorías de User
  */
 
 /**
- * Obtiene todas las categorías del usuario
+ * Obtiene todas las categorías del User
  */
 export const obtenerCategorias = async (
   usuarioId: number
-): Promise<ApiResponse<Categoria[]>> => {
+): Promise<ApiResponse<Category[]>> => {
   try {
     const resultado = await query(
       `SELECT id, usuario_id, nombre, descripcion, color, creado_en, actualizado_en 
@@ -25,7 +25,7 @@ export const obtenerCategorias = async (
       [usuarioId]
     );
 
-    const categorias: Categoria[] = resultado.rows.map(row => ({
+    const categorias: Category[] = resultado.rows.map(row => ({
       id: row.id,
       usuario_id: row.usuario_id,
       nombre: row.nombre,
@@ -54,7 +54,7 @@ export const obtenerCategorias = async (
 export const obtenerCategoriaPorId = async (
   categoriaId: number,
   usuarioId: number
-): Promise<ApiResponse<Categoria>> => {
+): Promise<ApiResponse<Category>> => {
   try {
     const resultado = await query(
       `SELECT id, usuario_id, nombre, descripcion, color, creado_en, actualizado_en 
@@ -70,11 +70,11 @@ export const obtenerCategoriaPorId = async (
       };
     }
 
-    const categoria: Categoria = resultado.rows[0];
+    const Category: Category = resultado.rows[0];
 
     return {
       success: true,
-      data: categoria,
+      data: Category,
     };
   } catch (error) {
     console.error('Error obteniendo categoría por ID:', error);
@@ -90,10 +90,10 @@ export const obtenerCategoriaPorId = async (
  */
 export const crearCategoria = async (
   usuarioId: number,
-  datosCategoria: CategoriaCreacion
-): Promise<ApiResponse<Categoria>> => {
+  datosCategoria: CategoryCreation
+): Promise<ApiResponse<Category>> => {
   try {
-    // Verificar si ya existe una categoría con el mismo nombre para este usuario
+    // Verificar si ya existe una categoría con el mismo nombre para este User
     const categoriaExiste = await query(
       'SELECT id FROM categorias WHERE nombre = $1 AND usuario_id = $2',
       [datosCategoria.nombre, usuarioId]
@@ -121,7 +121,7 @@ export const crearCategoria = async (
       ]
     );
 
-    const nuevaCategoria: Categoria = resultado.rows[0];
+    const nuevaCategoria: Category = resultado.rows[0];
 
     return {
       success: true,
@@ -143,10 +143,10 @@ export const crearCategoria = async (
 export const actualizarCategoria = async (
   categoriaId: number,
   usuarioId: number,
-  datosActualizacion: Partial<CategoriaCreacion>
-): Promise<ApiResponse<Categoria>> => {
+  datosActualizacion: Partial<CategoryCreation>
+): Promise<ApiResponse<Category>> => {
   try {
-    // Verificar que la categoría existe y pertenece al usuario
+    // Verificar que la categoría existe y pertenece al User
     const categoriaExiste = await query(
       'SELECT id FROM categorias WHERE id = $1 AND usuario_id = $2',
       [categoriaId, usuarioId]
@@ -217,7 +217,7 @@ export const actualizarCategoria = async (
 
     const resultado = await query(queryText, valores);
 
-    const categoriaActualizada: Categoria = resultado.rows[0];
+    const categoriaActualizada: Category = resultado.rows[0];
 
     return {
       success: true,
@@ -252,7 +252,7 @@ export const eliminarCategoria = async (
     if (cantidadTareas > 0) {
       return {
         success: false,
-        error: `No se puede eliminar la categoría porque tiene ${cantidadTareas} tarea(s) asociada(s)`,
+        error: `No se puede eliminar la categoría porque tiene ${cantidadTareas} Task(s) asociada(s)`,
       };
     }
 

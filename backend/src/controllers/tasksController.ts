@@ -1,5 +1,5 @@
-import { Response } from 'express';
-import { AuthenticatedRequest, FiltrosTareas } from '../types';
+﻿import { Response } from 'express';
+import { AuthenticatedRequest, TaskFilters } from '../types';
 import * as tasksService from '../services/tasksService';
 
 /**
@@ -9,19 +9,19 @@ import * as tasksService from '../services/tasksService';
 
 /**
  * GET /api/tareas
- * Obtiene todas las tareas del usuario con filtros y paginación
+ * Obtiene todas las tareas del User con filtros y paginación
  */
 export const obtenerTareas = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const filtros: FiltrosTareas = {
+    const filtros: TaskFilters = {
       completada: req.query.completada
         ? req.query.completada === 'true'
         : undefined,
-      categoria: req.query.categoria
-        ? parseInt(req.query.categoria as string)
+      Category: req.query.Category
+        ? parseInt(req.query.Category as string)
         : undefined,
       prioridad: req.query.prioridad as any,
       fecha_vencimiento: req.query.fecha_vencimiento as string,
@@ -67,7 +67,7 @@ export const obtenerTareas = async (
 
 /**
  * GET /api/tareas/:id
- * Obtiene una tarea específica por ID
+ * Obtiene una Task específica por ID
  */
 export const obtenerTareaPorId = async (
   req: AuthenticatedRequest,
@@ -80,7 +80,7 @@ export const obtenerTareaPorId = async (
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de Task inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -100,7 +100,7 @@ export const obtenerTareaPorId = async (
         data: resultado.data,
       });
     } else {
-      const statusCode = resultado.error === 'Tarea no encontrada' ? 404 : 500;
+      const statusCode = resultado.error === 'Task no encontrada' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
@@ -112,7 +112,7 @@ export const obtenerTareaPorId = async (
       });
     }
   } catch (error) {
-    console.error('Error en obtener tarea por ID controller:', error);
+    console.error('Error en obtener Task por ID controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -127,7 +127,7 @@ export const obtenerTareaPorId = async (
 
 /**
  * POST /api/tareas
- * Crea una nueva tarea
+ * Crea una nueva Task
  */
 export const crearTarea = async (
   req: AuthenticatedRequest,
@@ -177,7 +177,7 @@ export const crearTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en crear tarea controller:', error);
+    console.error('Error en crear Task controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -192,7 +192,7 @@ export const crearTarea = async (
 
 /**
  * PUT /api/tareas/:id
- * Actualiza una tarea existente
+ * Actualiza una Task existente
  */
 export const actualizarTarea = async (
   req: AuthenticatedRequest,
@@ -205,7 +205,7 @@ export const actualizarTarea = async (
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de Task inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -242,7 +242,7 @@ export const actualizarTarea = async (
       });
     } else {
       const statusCode =
-        resultado.error === 'Tarea no encontrada'
+        resultado.error === 'Task no encontrada'
           ? 404
           : resultado.error?.includes('no encontrada') ||
               resultado.error?.includes('no pertenece') ||
@@ -266,7 +266,7 @@ export const actualizarTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en actualizar tarea controller:', error);
+    console.error('Error en actualizar Task controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -281,7 +281,7 @@ export const actualizarTarea = async (
 
 /**
  * DELETE /api/tareas/:id
- * Elimina una tarea
+ * Elimina una Task
  */
 export const eliminarTarea = async (
   req: AuthenticatedRequest,
@@ -294,7 +294,7 @@ export const eliminarTarea = async (
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de Task inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -311,7 +311,7 @@ export const eliminarTarea = async (
         message: resultado.message,
       });
     } else {
-      const statusCode = resultado.error === 'Tarea no encontrada' ? 404 : 500;
+      const statusCode = resultado.error === 'Task no encontrada' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
@@ -323,7 +323,7 @@ export const eliminarTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en eliminar tarea controller:', error);
+    console.error('Error en eliminar Task controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -338,7 +338,7 @@ export const eliminarTarea = async (
 
 /**
  * PATCH /api/tareas/:id/completar
- * Marca una tarea como completada o pendiente
+ * Marca una Task como completada o pendiente
  */
 export const toggleCompletarTarea = async (
   req: AuthenticatedRequest,
@@ -351,7 +351,7 @@ export const toggleCompletarTarea = async (
       res.status(400).json({
         success: false,
         error: {
-          message: 'ID de tarea inválido',
+          message: 'ID de Task inválido',
           type: 'VALIDATION_ERROR',
           statusCode: 400,
           timestamp: new Date().toISOString(),
@@ -383,10 +383,10 @@ export const toggleCompletarTarea = async (
       res.status(200).json({
         success: true,
         data: resultado.data,
-        message: `Tarea marcada como ${completada ? 'completada' : 'pendiente'}`,
+        message: `Task marcada como ${completada ? 'completada' : 'pendiente'}`,
       });
     } else {
-      const statusCode = resultado.error === 'Tarea no encontrada' ? 404 : 500;
+      const statusCode = resultado.error === 'Task no encontrada' ? 404 : 500;
       res.status(statusCode).json({
         success: false,
         error: {
@@ -398,7 +398,7 @@ export const toggleCompletarTarea = async (
       });
     }
   } catch (error) {
-    console.error('Error en toggle completar tarea controller:', error);
+    console.error('Error en toggle completar Task controller:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -413,7 +413,7 @@ export const toggleCompletarTarea = async (
 
 /**
  * GET /api/tareas/estadisticas
- * Obtiene estadísticas de las tareas del usuario
+ * Obtiene estadísticas de las tareas del User
  */
 export const obtenerEstadisticasTareas = async (
   req: AuthenticatedRequest,

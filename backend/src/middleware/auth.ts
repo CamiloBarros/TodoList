@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+﻿import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/database';
-import { JWTPayload, AuthenticatedRequest, UsuarioPublico } from '../types';
+import { JWTPayload, AuthenticatedRequest, PublicUser } from '../types';
 import appConfig from '../config/env';
 
 /**
  * Middleware de autenticación JWT
- * Verifica el token JWT y adjunta la información del usuario a la request
+ * Verifica el token JWT y adjunta la información del User a la request
  */
 export const authenticateToken = async (
   req: Request,
@@ -34,7 +34,7 @@ export const authenticateToken = async (
     // Verificar el token JWT
     const decoded = jwt.verify(token, appConfig.jwt.secret) as JWTPayload;
 
-    // Verificar que el usuario existe y está activo
+    // Verificar que el User existe y está activo
     const result = await query(
       'SELECT id, email, nombre, creado_en, actualizado_en FROM usuarios WHERE id = $1 AND activo = true',
       [decoded.id]
@@ -44,7 +44,7 @@ export const authenticateToken = async (
       res.status(401).json({
         success: false,
         error: {
-          message: 'Usuario no encontrado o inactivo',
+          message: 'User no encontrado o inactivo',
           type: 'AUTHENTICATION_ERROR',
           statusCode: 401,
           timestamp: new Date().toISOString(),
@@ -53,8 +53,8 @@ export const authenticateToken = async (
       return;
     }
 
-    // Adjuntar información del usuario a la request
-    const usuario: UsuarioPublico = {
+    // Adjuntar información del User a la request
+    const User: PublicUser = {
       id: result.rows[0].id,
       email: result.rows[0].email,
       nombre: result.rows[0].nombre,
@@ -62,7 +62,7 @@ export const authenticateToken = async (
       actualizado_en: result.rows[0].actualizado_en,
     };
 
-    (req as AuthenticatedRequest).user = usuario;
+    (req as AuthenticatedRequest).user = User;
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -131,7 +131,7 @@ export const optionalAuth = async (
     );
 
     if (result.rows.length > 0) {
-      const usuario: UsuarioPublico = {
+      const User: PublicUser = {
         id: result.rows[0].id,
         email: result.rows[0].email,
         nombre: result.rows[0].nombre,
@@ -139,7 +139,7 @@ export const optionalAuth = async (
         actualizado_en: result.rows[0].actualizado_en,
       };
 
-      (req as AuthenticatedRequest).user = usuario;
+      (req as AuthenticatedRequest).user = User;
     }
 
     next();
@@ -150,12 +150,12 @@ export const optionalAuth = async (
 };
 
 /**
- * Genera un token JWT para un usuario
+ * Genera un token JWT para un User
  */
-export const generateToken = (usuario: UsuarioPublico): string => {
+export const generateToken = (User: PublicUser): string => {
   const payload: JWTPayload = {
-    id: usuario.id,
-    email: usuario.email,
+    id: User.id,
+    email: User.email,
     iss: appConfig.jwt.issuer,
   };
 

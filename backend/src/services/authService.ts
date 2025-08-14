@@ -1,368 +1,380 @@
-import bcrypt from 'bcryptjs';
+﻿import bcrypt from 'bcryptjs';
 import { query, transaction } from '../config/database';
 import { 
-  Usuario, 
-  UsuarioCreacion, 
-  UsuarioLogin, 
-  UsuarioPublico,
+  User, 
+  UserCreation, 
+  UserLogin, 
+  PublicUser,
   ApiResponse 
 } from '../types';
 import { generateToken } from '../middleware/auth';
 import appConfig from '../config/env';
 
 /**
- * Servicio de autenticación
- * Maneja registro, login y operaciones relacionadas con usuarios
+ * Authentication Service
+ * Handles registration, login and user-related operations
  */
 
 /**
- * Registra un nuevo usuario en el sistema
+ * Registers a new user in the system
  */
-export const registrarUsuario = async (
-  datosUsuario: UsuarioCreacion
-): Promise<ApiResponse<{ usuario: UsuarioPublico; token: string }>> => {
+export const registerUser = async (
+  userData: UserCreation
+): Promise<ApiResponse<{ user: PublicUser; token: string }>> => {
   try {
-    // Verificar si el email ya existe
-    const emailExiste = await query(
+    // Check if email already exists
+    const emailExists = await query(
       'SELECT id FROM usuarios WHERE email = $1',
-      [datosUsuario.email]
+      [userData.email]
     );
 
-    if (emailExiste.rows.length > 0) {
+    if (emailExists.rows.length > 0) {
       return {
         success: false,
-        error: 'El email ya está registrado',
+        error: 'Email is already registered',
       };
     }
 
-    // Hash de la contraseña
+    // Hash password
     const passwordHash = await bcrypt.hash(
-      datosUsuario.password,
+      userData.password,
       appConfig.security.bcryptRounds
     );
 
-    // Crear usuario en una transacción
-    const resultado = await transaction(async (client) => {
-      const nuevoUsuario = await client.query(
+    // Create user in a transaction
+    const result = await transaction(async (client) => {
+      const newUser = await client.query(
         `INSERT INTO usuarios (email, nombre, password_hash, activo) 
          VALUES ($1, $2, $3, true) 
          RETURNING id, email, nombre, creado_en, actualizado_en`,
-        [datosUsuario.email, datosUsuario.nombre, passwordHash]
+        [userData.email, userData.name, passwordHash]
       );
 
-      return nuevoUsuario.rows[0];
+      return newUser.rows[0];
     });
 
-    const usuarioPublico: UsuarioPublico = {
-      id: resultado.id,
-      email: resultado.email,
-      nombre: resultado.nombre,
-      creado_en: resultado.creado_en,
-      actualizado_en: resultado.actualizado_en,
+    const publicUser: PublicUser = {
+      id: result.id,
+      email: result.email,
+      name: result.nombre,
+      created_at: result.creado_en,
+      updated_at: result.actualizado_en,
     };
 
-    // Generar token JWT
-    const token = generateToken(usuarioPublico);
+    // Generate JWT token
+    const token = generateToken(publicUser);
 
     return {
       success: true,
       data: {
-        usuario: usuarioPublico,
+        user: publicUser,
         token,
       },
-      message: 'Usuario registrado exitosamente',
+      message: 'User registered successfully',
     };
   } catch (error) {
-    console.error('Error en registro de usuario:', error);
+    console.error('Error in user registration:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Autentica un usuario existente
+ * Authenticates an existing user
  */
-export const loginUsuario = async (
-  credenciales: UsuarioLogin
-): Promise<ApiResponse<{ usuario: UsuarioPublico; token: string }>> => {
+export const loginUser = async (
+  credentials: UserLogin
+): Promise<ApiResponse<{ user: PublicUser; token: string }>> => {
   try {
-    // Buscar usuario por email
-    const resultado = await query(
+    // Find user by email
+    const result = await query(
       'SELECT id, email, nombre, password_hash, creado_en, actualizado_en, activo FROM usuarios WHERE email = $1',
-      [credenciales.email]
+      [credentials.email]
     );
 
-    if (resultado.rows.length === 0) {
+    if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Credenciales inválidas',
+        error: 'Invalid credentials',
       };
     }
 
-    const usuario = resultado.rows[0];
+    const user = result.rows[0];
 
-    // Verificar si el usuario está activo
-    if (!usuario.activo) {
+    // Check if user is active
+    if (!user.activo) {
       return {
         success: false,
-        error: 'Cuenta desactivada',
+        error: 'Account deactivated',
       };
     }
 
-    // Verificar contraseña
-    const passwordValida = await bcrypt.compare(
-      credenciales.password,
-      usuario.password_hash
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(
+      credentials.password,
+      user.password_hash
     );
 
-    if (!passwordValida) {
+    if (!isPasswordValid) {
       return {
         success: false,
-        error: 'Credenciales inválidas',
+        error: 'Invalid credentials',
       };
     }
 
-    // Actualizar última fecha de login
+    // Update last login date
     await query(
       'UPDATE usuarios SET actualizado_en = CURRENT_TIMESTAMP WHERE id = $1',
-      [usuario.id]
+      [user.id]
     );
 
-    const usuarioPublico: UsuarioPublico = {
-      id: usuario.id,
-      email: usuario.email,
-      nombre: usuario.nombre,
-      creado_en: usuario.creado_en,
-      actualizado_en: usuario.actualizado_en,
+    const publicUser: PublicUser = {
+      id: user.id,
+      email: user.email,
+      name: user.nombre,
+      created_at: user.creado_en,
+      updated_at: user.actualizado_en,
     };
 
-    // Generar token JWT
-    const token = generateToken(usuarioPublico);
+    // Generate JWT token
+    const token = generateToken(publicUser);
 
     return {
       success: true,
       data: {
-        usuario: usuarioPublico,
+        user: publicUser,
         token,
       },
-      message: 'Login exitoso',
+      message: 'Login successful',
     };
   } catch (error) {
-    console.error('Error en login de usuario:', error);
+    console.error('Error in user login:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Obtiene el perfil del usuario autenticado
+ * Gets the authenticated user's profile
  */
-export const obtenerPerfil = async (
-  usuarioId: number
-): Promise<ApiResponse<UsuarioPublico>> => {
+export const getProfile = async (
+  userId: number
+): Promise<ApiResponse<PublicUser>> => {
   try {
-    const resultado = await query(
+    const result = await query(
       'SELECT id, email, nombre, creado_en, actualizado_en FROM usuarios WHERE id = $1 AND activo = true',
-      [usuarioId]
+      [userId]
     );
 
-    if (resultado.rows.length === 0) {
+    if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Usuario no encontrado',
+        error: 'User not found',
       };
     }
 
-    const usuario: UsuarioPublico = resultado.rows[0];
+    const user: PublicUser = {
+      id: result.rows[0].id,
+      email: result.rows[0].email,
+      name: result.rows[0].nombre,
+      created_at: result.rows[0].creado_en,
+      updated_at: result.rows[0].actualizado_en,
+    };
 
     return {
       success: true,
-      data: usuario,
+      data: user,
     };
   } catch (error) {
-    console.error('Error al obtener perfil:', error);
+    console.error('Error getting profile:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Actualiza el perfil del usuario
+ * Updates user profile
  */
-export const actualizarPerfil = async (
-  usuarioId: number,
-  datos: { nombre?: string; email?: string }
-): Promise<ApiResponse<UsuarioPublico>> => {
+export const updateProfile = async (
+  userId: number,
+  data: { name?: string; email?: string }
+): Promise<ApiResponse<PublicUser>> => {
   try {
-    // Verificar si el nuevo email ya existe (si se está cambiando)
-    if (datos.email) {
-      const emailExiste = await query(
+    // Check if new email already exists (if changing)
+    if (data.email) {
+      const emailExists = await query(
         'SELECT id FROM usuarios WHERE email = $1 AND id != $2',
-        [datos.email, usuarioId]
+        [data.email, userId]
       );
 
-      if (emailExiste.rows.length > 0) {
+      if (emailExists.rows.length > 0) {
         return {
           success: false,
-          error: 'El email ya está en uso',
+          error: 'Email is already in use',
         };
       }
     }
 
-    // Construir query de actualización dinámicamente
-    const camposActualizar: string[] = [];
-    const valores: any[] = [];
-    let contador = 1;
+    // Build update query dynamically
+    const fieldsToUpdate: string[] = [];
+    const values: any[] = [];
+    let counter = 1;
 
-    if (datos.nombre) {
-      camposActualizar.push(`nombre = $${contador}`);
-      valores.push(datos.nombre);
-      contador++;
+    if (data.name) {
+      fieldsToUpdate.push(`nombre = $${counter}`);
+      values.push(data.name);
+      counter++;
     }
 
-    if (datos.email) {
-      camposActualizar.push(`email = $${contador}`);
-      valores.push(datos.email);
-      contador++;
+    if (data.email) {
+      fieldsToUpdate.push(`email = $${counter}`);
+      values.push(data.email);
+      counter++;
     }
 
-    if (camposActualizar.length === 0) {
+    if (fieldsToUpdate.length === 0) {
       return {
         success: false,
-        error: 'No hay datos para actualizar',
+        error: 'No data to update',
       };
     }
 
-    // Agregar actualizado_en y usuario ID
-    camposActualizar.push(`actualizado_en = CURRENT_TIMESTAMP`);
-    valores.push(usuarioId);
+    // Add updated_at and user ID
+    fieldsToUpdate.push(`actualizado_en = CURRENT_TIMESTAMP`);
+    values.push(userId);
 
     const queryText = `
       UPDATE usuarios 
-      SET ${camposActualizar.join(', ')} 
-      WHERE id = $${valores.length} AND activo = true
+      SET ${fieldsToUpdate.join(', ')} 
+      WHERE id = $${values.length} AND activo = true
       RETURNING id, email, nombre, creado_en, actualizado_en
     `;
 
-    const resultado = await query(queryText, valores);
+    const result = await query(queryText, values);
 
-    if (resultado.rows.length === 0) {
+    if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Usuario no encontrado',
+        error: 'User not found',
       };
     }
 
-    const usuarioActualizado: UsuarioPublico = resultado.rows[0];
+    const updatedUser: PublicUser = {
+      id: result.rows[0].id,
+      email: result.rows[0].email,
+      name: result.rows[0].nombre,
+      created_at: result.rows[0].creado_en,
+      updated_at: result.rows[0].actualizado_en,
+    };
 
     return {
       success: true,
-      data: usuarioActualizado,
-      message: 'Perfil actualizado exitosamente',
+      data: updatedUser,
+      message: 'Profile updated successfully',
     };
   } catch (error) {
-    console.error('Error al actualizar perfil:', error);
+    console.error('Error updating profile:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Cambia la contraseña del usuario
+ * Changes user password
  */
-export const cambiarPassword = async (
-  usuarioId: number,
-  passwordActual: string,
-  passwordNueva: string
+export const changePassword = async (
+  userId: number,
+  currentPassword: string,
+  newPassword: string
 ): Promise<ApiResponse<void>> => {
   try {
-    // Obtener hash actual de la contraseña
-    const resultado = await query(
+    // Get current password hash
+    const result = await query(
       'SELECT password_hash FROM usuarios WHERE id = $1 AND activo = true',
-      [usuarioId]
+      [userId]
     );
 
-    if (resultado.rows.length === 0) {
+    if (result.rows.length === 0) {
       return {
         success: false,
-        error: 'Usuario no encontrado',
+        error: 'User not found',
       };
     }
 
-    // Verificar contraseña actual
-    const passwordValida = await bcrypt.compare(
-      passwordActual,
-      resultado.rows[0].password_hash
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      result.rows[0].password_hash
     );
 
-    if (!passwordValida) {
+    if (!isPasswordValid) {
       return {
         success: false,
-        error: 'Contraseña actual incorrecta',
+        error: 'Current password is incorrect',
       };
     }
 
-    // Hash de la nueva contraseña
-    const nuevoPasswordHash = await bcrypt.hash(
-      passwordNueva,
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(
+      newPassword,
       appConfig.security.bcryptRounds
     );
 
-    // Actualizar contraseña
+    // Update password
     await query(
       'UPDATE usuarios SET password_hash = $1, actualizado_en = CURRENT_TIMESTAMP WHERE id = $2',
-      [nuevoPasswordHash, usuarioId]
+      [newPasswordHash, userId]
     );
 
     return {
       success: true,
-      message: 'Contraseña actualizada exitosamente',
+      message: 'Password updated successfully',
     };
   } catch (error) {
-    console.error('Error al cambiar contraseña:', error);
+    console.error('Error changing password:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };
 
 /**
- * Desactiva la cuenta del usuario
+ * Deactivates user account
  */
-export const desactivarCuenta = async (
-  usuarioId: number
+export const deactivateAccount = async (
+  userId: number
 ): Promise<ApiResponse<void>> => {
   try {
-    const resultado = await query(
+    const result = await query(
       'UPDATE usuarios SET activo = false, actualizado_en = CURRENT_TIMESTAMP WHERE id = $1 AND activo = true',
-      [usuarioId]
+      [userId]
     );
 
-    if (resultado.rowCount === 0) {
+    if (result.rowCount === 0) {
       return {
         success: false,
-        error: 'Usuario no encontrado',
+        error: 'User not found',
       };
     }
 
     return {
       success: true,
-      message: 'Cuenta desactivada exitosamente',
+      message: 'Account deactivated successfully',
     };
   } catch (error) {
-    console.error('Error al desactivar cuenta:', error);
+    console.error('Error deactivating account:', error);
     return {
       success: false,
-      error: 'Error interno del servidor',
+      error: 'Internal server error',
     };
   }
 };

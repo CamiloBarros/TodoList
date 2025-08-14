@@ -1,138 +1,138 @@
 // Global type definitions for the TodoList application
 import { Request } from 'express';
 
-export interface Usuario {
+export interface User {
   id: number;
   email: string;
-  nombre: string;
+  name: string;
   password_hash: string;
-  creado_en: Date;
-  actualizado_en: Date;
-  activo: boolean;
+  created_at: Date;
+  updated_at: Date;
+  active: boolean;
 }
 
-export interface UsuarioCreacion {
+export interface UserCreation {
   email: string;
-  nombre: string;
+  name: string;
   password: string;
 }
 
-export interface UsuarioLogin {
+export interface UserLogin {
   email: string;
   password: string;
 }
 
-export interface UsuarioPublico {
+export interface PublicUser {
   id: number;
   email: string;
-  nombre: string;
-  creado_en: Date;
-  actualizado_en: Date;
+  name: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export interface Categoria {
+export interface Category {
   id: number;
-  usuario_id: number;
-  nombre: string;
-  descripcion?: string;
+  user_id: number;
+  name: string;
+  description?: string;
   color: string;
-  creado_en: Date;
-  actualizado_en: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
-export interface CategoriaCreacion {
-  nombre: string;
-  descripcion?: string;
+export interface CategoryCreation {
+  name: string;
+  description?: string;
   color?: string;
 }
 
-export type Prioridad = 'baja' | 'media' | 'alta';
+export type Priority = 'low' | 'medium' | 'high';
 
-export interface Tarea {
+export interface Task {
   id: number;
-  usuario_id: number;
-  categoria_id?: number;
-  titulo: string;
-  descripcion?: string;
-  completada: boolean;
-  prioridad: Prioridad;
-  fecha_vencimiento?: Date;
-  completada_en?: Date;
-  creado_en: Date;
-  actualizado_en: Date;
+  user_id: number;
+  category_id?: number;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: Priority;
+  due_date?: Date;
+  completed_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 
-  // Relaciones
-  categoria?: Categoria;
-  etiquetas?: Etiqueta[];
+  // Relations
+  category?: Category;
+  tags?: Tag[];
 }
 
-export interface TareaCreacion {
-  titulo: string;
-  descripcion?: string;
-  categoria_id?: number;
-  prioridad?: Prioridad;
-  fecha_vencimiento?: Date;
-  etiquetas?: number[];
+export interface TaskCreation {
+  title: string;
+  description?: string;
+  category_id?: number;
+  priority?: Priority;
+  due_date?: Date;
+  tags?: number[];
 }
 
-export interface TareaActualizacion {
-  titulo?: string;
-  descripcion?: string;
-  categoria_id?: number;
-  prioridad?: Prioridad;
-  fecha_vencimiento?: Date;
-  completada?: boolean;
-  etiquetas?: number[];
+export interface TaskUpdate {
+  title?: string;
+  description?: string;
+  category_id?: number;
+  priority?: Priority;
+  due_date?: Date;
+  completed?: boolean;
+  tags?: number[];
 }
 
-export interface Etiqueta {
+export interface Tag {
   id: number;
-  usuario_id: number;
-  nombre: string;
+  user_id: number;
+  name: string;
   color: string;
-  creado_en: Date;
-  actualizado_en?: Date;
-  uso_count?: number;
+  created_at: Date;
+  updated_at?: Date;
+  usage_count?: number;
 }
 
-export interface EtiquetaCreacion {
-  nombre: string;
+export interface TagCreation {
+  name: string;
   color?: string;
 }
 
-// DTOs para etiquetas
-export interface CrearEtiquetaDTO {
-  nombre: string;
+// DTOs for tags
+export interface CreateTagDTO {
+  name: string;
   color?: string;
 }
 
-export interface ActualizarEtiquetaDTO {
-  nombre?: string;
+export interface UpdateTagDTO {
+  name?: string;
   color?: string;
 }
 
-export interface TareaEtiqueta {
+export interface TaskTag {
   id: number;
-  tarea_id: number;
-  etiqueta_id: number;
-  creado_en: Date;
+  task_id: number;
+  tag_id: number;
+  created_at: Date;
 }
 
-// Filtros y consultas
-export interface FiltrosTareas {
-  completada?: boolean;
-  categoria?: number;
-  prioridad?: Prioridad;
-  fecha_vencimiento?: string;
-  busqueda?: string;
-  etiquetas?: string;
-  ordenar?: 'creado_en' | 'fecha_vencimiento' | 'prioridad' | 'titulo';
-  direccion?: 'asc' | 'desc';
+// Filters and queries
+export interface TaskFilters {
+  completed?: boolean;
+  category?: number;
+  priority?: Priority;
+  due_date?: string;
+  search?: string;
+  tags?: string;
+  sort_by?: 'created_at' | 'due_date' | 'priority' | 'title';
+  sort_direction?: 'asc' | 'desc';
   page?: number;
   limit?: number;
 }
 
-export interface ResultadoPaginado<T> {
+export interface PaginatedResult<T> {
   data: T[];
   pagination: {
     page: number;
@@ -153,7 +153,7 @@ export interface JWTPayload {
   iss?: string;
 }
 
-// Responses de API
+// API Responses
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -181,7 +181,7 @@ export interface ApiError {
 
 // Middleware types
 export interface AuthenticatedRequest extends Request {
-  user: UsuarioPublico;
+  user: PublicUser;
 }
 
 // Database types
@@ -268,62 +268,62 @@ export interface AppConfig {
   };
 }
 
-// Estadísticas
-export interface EstadisticasUsuario {
-  totalTareas: number;
-  tareasCompletadas: number;
-  tareasPendientes: number;
-  tareasVencidas: number;
-  tareasPorPrioridad: {
-    alta: number;
-    media: number;
-    baja: number;
+// Statistics
+export interface UserStats {
+  totalTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  tasksByPriority: {
+    high: number;
+    medium: number;
+    low: number;
   };
-  tareasPorCategoria: {
-    categoria: string;
+  tasksByCategory: {
+    category: string;
     color: string;
     total: number;
   }[];
-  productividadSemanal: {
-    semana: string;
-    completadas: number;
-    creadas: number;
+  weeklyProductivity: {
+    week: string;
+    completed: number;
+    created: number;
   }[];
 }
 
-export interface EstadisticasCategoria {
-  categoria_id: number;
-  nombre: string;
+export interface CategoryStats {
+  category_id: number;
+  name: string;
   color: string;
-  total_tareas: number;
-  tareas_completadas: number;
-  tareas_pendientes: number;
-  tareas_vencidas: number;
-  distribucion_prioridad: {
-    alta: number;
-    media: number;
-    baja: number;
+  total_tasks: number;
+  completed_tasks: number;
+  pending_tasks: number;
+  overdue_tasks: number;
+  priority_distribution: {
+    high: number;
+    medium: number;
+    low: number;
   };
-  porcentaje_completado: number;
+  completion_percentage: number;
 }
 
-export interface EstadisticasEtiqueta {
-  etiqueta_id: number;
-  nombre: string;
+export interface TagStats {
+  tag_id: number;
+  name: string;
   color: string;
-  total_tareas: number;
-  tareas_completadas: number;
-  tareas_pendientes: number;
-  tareas_vencidas: number;
-  distribucion_prioridad: {
-    alta: number;
-    media: number;
-    baja: number;
+  total_tasks: number;
+  completed_tasks: number;
+  pending_tasks: number;
+  overdue_tasks: number;
+  priority_distribution: {
+    high: number;
+    medium: number;
+    low: number;
   };
-  porcentaje_completado: number;
+  completion_percentage: number;
 }
 
-// Enums y códigos de error
+// Enums and error codes
 export enum ErrorCode {
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
@@ -368,3 +368,4 @@ export interface HealthStatus {
     responseTime?: number;
   };
 }
+
