@@ -13,11 +13,11 @@ import * as authService from '../services/authService';
  */
 export const registro = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, nombre, password } = req.body;
+    const { email, name, password } = req.body;
 
-    const resultado = await authService.registrarUsuario({
+    const resultado = await authService.registerUser({
       email,
-      nombre,
+      name,
       password,
     });
 
@@ -61,7 +61,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    const resultado = await authService.loginUsuario({
+    const resultado = await authService.loginUser({
       email,
       password,
     });
@@ -106,7 +106,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
  */
 export const perfil = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const resultado = await authService.obtenerPerfil(req.user.id);
+    const resultado = await authService.getProfile(req.user.id);
 
     if (resultado.success) {
       res.status(200).json({
@@ -144,10 +144,10 @@ export const perfil = async (req: AuthenticatedRequest, res: Response): Promise<
  */
 export const actualizarPerfil = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { nombre, email } = req.body;
+    const { name, email } = req.body;
 
-    const resultado = await authService.actualizarPerfil(req.user.id, {
-      nombre,
+    const resultado = await authService.updateProfile(req.user.id, {
+      name,
       email,
     });
 
@@ -194,7 +194,7 @@ export const cambiarPassword = async (req: AuthenticatedRequest, res: Response):
   try {
     const { passwordActual, passwordNueva } = req.body;
 
-    const resultado = await authService.cambiarPassword(
+    const resultado = await authService.changePassword(
       req.user.id,
       passwordActual,
       passwordNueva
@@ -240,7 +240,7 @@ export const cambiarPassword = async (req: AuthenticatedRequest, res: Response):
  */
 export const desactivarCuenta = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const resultado = await authService.desactivarCuenta(req.user.id);
+    const resultado = await authService.deactivateAccount(req.user.id);
 
     if (resultado.success) {
       res.status(200).json({

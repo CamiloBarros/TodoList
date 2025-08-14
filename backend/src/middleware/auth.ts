@@ -53,16 +53,16 @@ export const authenticateToken = async (
       return;
     }
 
-    // Adjuntar información del User a la request
-    const User: PublicUser = {
+    // Attach user information to request
+    const user: PublicUser = {
       id: result.rows[0].id,
       email: result.rows[0].email,
-      nombre: result.rows[0].nombre,
-      creado_en: result.rows[0].creado_en,
-      actualizado_en: result.rows[0].actualizado_en,
+      name: result.rows[0].nombre,
+      created_at: result.rows[0].creado_en,
+      updated_at: result.rows[0].actualizado_en,
     };
 
-    (req as AuthenticatedRequest).user = User;
+    (req as AuthenticatedRequest).user = user;
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -131,15 +131,15 @@ export const optionalAuth = async (
     );
 
     if (result.rows.length > 0) {
-      const User: PublicUser = {
+      const user: PublicUser = {
         id: result.rows[0].id,
         email: result.rows[0].email,
-        nombre: result.rows[0].nombre,
-        creado_en: result.rows[0].creado_en,
-        actualizado_en: result.rows[0].actualizado_en,
+        name: result.rows[0].nombre,
+        created_at: result.rows[0].creado_en,
+        updated_at: result.rows[0].actualizado_en,
       };
 
-      (req as AuthenticatedRequest).user = User;
+      (req as AuthenticatedRequest).user = user;
     }
 
     next();
