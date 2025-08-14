@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import * as authController from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
-import { 
-  validateRegistro, 
+import {
+  validateRegistro,
   validateLogin,
-  handleValidationErrors
+  handleValidationErrors,
 } from '../middleware/validation';
 import { body } from 'express-validator';
 
@@ -21,7 +21,9 @@ const validateCambiarPassword = [
     .isLength({ min: 8 })
     .withMessage('La nueva contraseña debe tener al menos 8 caracteres')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('La nueva contraseña debe contener al menos una minúscula, una mayúscula y un número'),
+    .withMessage(
+      'La nueva contraseña debe contener al menos una minúscula, una mayúscula y un número'
+    ),
   handleValidationErrors,
 ];
 
@@ -68,28 +70,46 @@ router.get('/perfil', authenticateToken, authController.perfil as any);
  * @desc    Actualizar perfil del usuario autenticado
  * @access  Private
  */
-router.put('/perfil', authenticateToken, validateActualizarPerfil, authController.actualizarPerfil as any);
+router.put(
+  '/perfil',
+  authenticateToken,
+  validateActualizarPerfil,
+  authController.actualizarPerfil as any
+);
 
 /**
  * @route   POST /api/auth/cambiar-password
  * @desc    Cambiar contraseña del usuario autenticado
  * @access  Private
  */
-router.post('/cambiar-password', authenticateToken, validateCambiarPassword, authController.cambiarPassword as any);
+router.post(
+  '/cambiar-password',
+  authenticateToken,
+  validateCambiarPassword,
+  authController.cambiarPassword as any
+);
 
 /**
  * @route   DELETE /api/auth/cuenta
  * @desc    Desactivar cuenta del usuario autenticado
  * @access  Private
  */
-router.delete('/cuenta', authenticateToken, authController.desactivarCuenta as any);
+router.delete(
+  '/cuenta',
+  authenticateToken,
+  authController.desactivarCuenta as any
+);
 
 /**
  * @route   POST /api/auth/verificar-token
  * @desc    Verificar si el token JWT es válido
  * @access  Private
  */
-router.post('/verificar-token', authenticateToken, authController.verificarToken as any);
+router.post(
+  '/verificar-token',
+  authenticateToken,
+  authController.verificarToken as any
+);
 
 /**
  * @route   POST /api/auth/logout

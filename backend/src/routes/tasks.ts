@@ -45,7 +45,11 @@ router.get('/estadisticas', tasksController.obtenerEstadisticasTareas as any);
  * @desc    Obtener una tarea específica por ID
  * @access  Private
  */
-router.get('/:id', ...validateIdParam, tasksController.obtenerTareaPorId as any);
+router.get(
+  '/:id',
+  ...validateIdParam,
+  tasksController.obtenerTareaPorId as any
+);
 
 /**
  * @route   POST /api/tareas
@@ -61,7 +65,11 @@ router.post('/', ...validateCrearTarea, tasksController.crearTarea as any);
  * @access  Private
  * @body    { titulo?, descripcion?, categoria_id?, prioridad?, fecha_vencimiento?, completada?, etiquetas? }
  */
-router.put('/:id', ...validateActualizarTarea, tasksController.actualizarTarea as any);
+router.put(
+  '/:id',
+  ...validateActualizarTarea,
+  tasksController.actualizarTarea as any
+);
 
 /**
  * @route   PATCH /api/tareas/:id/completar
@@ -69,7 +77,12 @@ router.put('/:id', ...validateActualizarTarea, tasksController.actualizarTarea a
  * @access  Private
  * @body    { completada: boolean }
  */
-router.patch('/:id/completar', ...validateIdParam, ...validateToggleCompletar, tasksController.toggleCompletarTarea as any);
+router.patch(
+  '/:id/completar',
+  ...validateIdParam,
+  ...validateToggleCompletar,
+  tasksController.toggleCompletarTarea as any
+);
 
 /**
  * @route   DELETE /api/tareas/:id
