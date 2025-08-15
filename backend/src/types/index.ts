@@ -124,6 +124,8 @@ export interface TaskFilters {
   category?: number;
   priority?: Priority;
   due_date?: string;
+  date_from?: string;
+  date_to?: string;
   search?: string;
   tags?: string;
   sort_by?: 'created_at' | 'due_date' | 'priority' | 'title';

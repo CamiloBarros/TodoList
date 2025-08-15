@@ -28,6 +28,8 @@ export const getTasks = async (
       category,
       priority,
       due_date,
+      date_from,
+      date_to,
       search,
       tags,
 
@@ -87,6 +89,16 @@ export const getTasks = async (
     if (due_date) {
       queryText += ` AND DATE(t.due_date) = DATE($${paramCounter})`;
       params.push(due_date);
+      paramCounter++;
+    }
+    if (date_from) {
+      queryText += ` AND t.due_date >= $${paramCounter}`;
+      params.push(date_from);
+      paramCounter++;
+    }
+    if (date_to) {
+      queryText += ` AND t.due_date <= $${paramCounter}`;
+      params.push(date_to);
       paramCounter++;
     }
 
@@ -169,6 +181,16 @@ export const getTasks = async (
     if (due_date) {
       countQuery += ` AND DATE(t.due_date) = DATE($${countParamCounter})`;
       countParams.push(due_date);
+      countParamCounter++;
+    }
+    if (date_from) {
+      countQuery += ` AND t.due_date >= $${countParamCounter}`;
+      countParams.push(date_from);
+      countParamCounter++;
+    }
+    if (date_to) {
+      countQuery += ` AND t.due_date <= $${countParamCounter}`;
+      countParams.push(date_to);
       countParamCounter++;
     }
 

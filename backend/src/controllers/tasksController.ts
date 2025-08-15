@@ -25,6 +25,8 @@ export const getTasks = async (
         : undefined,
       priority: req.query.priority as any,
       due_date: req.query.due_date as string,
+      date_from: req.query.date_from as string,
+      date_to: req.query.date_to as string,
       search: req.query.search as string,
       tags: req.query.tags as string,
       sort_by: req.query.sort_by as any,
