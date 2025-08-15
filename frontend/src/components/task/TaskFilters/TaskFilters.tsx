@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useDebounce } from '@/hooks/useDebounce'
 import { Search } from 'lucide-react'
 import { Input, Select } from '@/components/common'
 import { categoryService, tagService } from '@/services'
@@ -19,6 +20,7 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [searchTerm, setSearchTerm] = useState(filters.search || '')
+  const debouncedSearch = useDebounce(searchTerm, 400)
 
   useEffect(() => {
     const loadData = async () => {
@@ -101,6 +103,12 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
     })),
   ]
 
+  // Actualizar el filtro solo cuando debouncedSearch cambie
+  useEffect(() => {
+    onFiltersChange({ ...filters, search: debouncedSearch || undefined })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch])
+
   return (
     <div className={styles.taskFilters}>
       <div className={`${styles.filterGroup} ${styles.wide}`}>
@@ -108,10 +116,7 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
           type='text'
           placeholder='Search tasks...'
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value)
-            onFiltersChange({ ...filters, search: e.target.value || undefined })
-          }}
+          onChange={(e) => setSearchTerm(e.target.value)}
           icon={<Search size={16} />}
           className={styles.searchInput}
         />

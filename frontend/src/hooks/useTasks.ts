@@ -16,6 +16,8 @@ interface UseTasksOptions {
   initialPagination?: PaginationParams
 }
 
+let tempIdCounter = -1 // Para ids temporales únicos
+
 export const useTasks = (options: UseTasksOptions = {}) => {
   const {
     autoFetch = true,
@@ -71,10 +73,33 @@ export const useTasks = (options: UseTasksOptions = {}) => {
   )
 
   const createTask = async (task: TaskCreate) => {
+    // Crear tarea optimista con id temporal
+    const optimisticTask: Task = {
+      id: tempIdCounter--,
+      title: task.title,
+      description: task.description || '',
+      priority: task.priority,
+      due_date: task.due_date || '',
+      completed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      tags: [],
+      category: undefined,
+      category_id: task.category_id,
+      user_id: 0,
+    }
+
+    setTasks((prev) => [optimisticTask, ...prev])
     try {
       setLoading(true)
       const newTask = await taskService.createTask(task)
-      setTasks((prev) => [newTask, ...prev])
+      // Reemplazar la tarea temporal por la real
+      if (newTask) {
+        setTasks((prev) => [
+          newTask,
+          ...prev.filter((t) => t.id !== optimisticTask.id),
+        ])
+      }
 
       addNotification({
         type: 'success',
@@ -82,6 +107,8 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         message: `Task "${newTask.title}" has been created successfully`,
       })
     } catch (err: unknown) {
+      // Rollback: eliminar la tarea optimista
+      setTasks((prev) => prev.filter((t) => t.id !== optimisticTask.id))
       const errorMessage = getErrorMessage(err)
       addNotification({
         type: 'error',
@@ -119,17 +146,25 @@ export const useTasks = (options: UseTasksOptions = {}) => {
   }
 
   const deleteTask = async (id: number) => {
+    // Optimista: eliminar de inmediato y guardar referencia para rollback
+    let removedTask: Task | undefined
+    setTasks((prev) => {
+      removedTask = prev.find((t) => t.id === id)
+      return prev.filter((t) => t.id !== id)
+    })
     try {
       setLoading(true)
       await taskService.deleteTask(id)
-      setTasks((prev) => prev.filter((t) => t.id !== id))
-
       addNotification({
         type: 'success',
         title: 'Task deleted',
         message: 'Task has been deleted successfully',
       })
     } catch (err: unknown) {
+      // Rollback: restaurar la tarea eliminada
+      if (removedTask) {
+        setTasks((prev) => [removedTask!, ...prev])
+      }
       const errorMessage = getErrorMessage(err)
       addNotification({
         type: 'error',
