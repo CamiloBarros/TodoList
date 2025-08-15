@@ -5,13 +5,13 @@ import {
   X,
   Home,
   CheckSquare,
-  Settings,
-  User,
+  // Settings,
+  // User,
   LogOut,
   Moon,
   Sun,
-  Bell,
-  Search,
+  // Bell,
+  // Search,
   Plus,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  // const [searchQuery, setSearchQuery] = useState('')
   const profileMenuRef = useRef<HTMLDivElement>(null)
 
   // Close mobile menu when route changes
@@ -130,10 +130,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Searching for:', searchQuery)
-  }
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   console.log('Searching for:', searchQuery)
+  // }
 
   return (
     <nav 
