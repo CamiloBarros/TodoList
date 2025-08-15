@@ -11,8 +11,8 @@ import {
   Star,
   MoreVertical,
 } from 'lucide-react'
-import type { Task } from '../../types'
-import { formatDate, getContrastingTextColor } from '../../utils/helpers'
+import type { Task } from '@/types'
+import { formatDate, getContrastingTextColor } from '@/utils/helpers'
 import styles from './TaskCard.module.css'
 
 interface TaskCardProps {

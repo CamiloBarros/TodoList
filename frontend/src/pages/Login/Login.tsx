@@ -5,10 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
 import { Mail, Lock, AlertCircle, CheckSquare } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
-import { Input, Button } from '../components/ui'
-import { getErrorMessage } from '../utils/helpers'
-import type { LoginCredentials } from '../types'
+import { useAuth } from '../../hooks/useAuth'
+import { Input, Button } from '../../components/common'
+import { getErrorMessage } from '../../utils/helpers'
+import type { LoginCredentials } from '../../types'
 import styles from './Login.module.css'
 
 const loginSchema = z.object({
@@ -86,10 +86,7 @@ const LoginPage: React.FC = () => {
           </div>
         )}
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className={styles.form}
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
           <Input
             type='email'
             label='Email'

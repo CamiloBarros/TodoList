@@ -1,4 +1,4 @@
-/* Modern Task View Styles */
+/* Modern Task View Styles - Responsive Enhanced */
 .taskView {
   display: flex;
   flex-direction: column;
@@ -6,12 +6,13 @@
   padding: var(--spacing-lg);
 }
 
-/* Toolbar */
+/* ===================== 
+   TOOLBAR 
+   ===================== */
 .toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-lg);
+  flex-direction: column;
+  gap: var(--spacing-md);
   padding: var(--spacing-lg);
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
@@ -19,32 +20,43 @@
   box-shadow: var(--shadow-sm);
 }
 
-.toolbarLeft {
+.toolbarRow {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  flex: 1;
-}
-
-.toolbarRight {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--spacing-md);
 }
 
-/* View Toggle */
+.filterRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.filterTabsContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ===================== 
+   VIEW TOGGLE 
+   ===================== */
 .viewToggle {
   display: flex;
   background: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xs);
   border: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .viewButton {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   background: transparent;
@@ -52,6 +64,10 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  min-height: 38px;
 }
 
 .viewButton:hover {
@@ -65,7 +81,13 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Filter Tabs */
+.viewLabel {
+  display: none;
+}
+
+/* ===================== 
+   FILTER TABS 
+   ===================== */
 .filterTabs {
   display: flex;
   gap: var(--spacing-xs);
@@ -73,6 +95,15 @@
   border-radius: var(--radius-lg);
   padding: var(--spacing-xs);
   border: 1px solid var(--color-border);
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filterTabs::-webkit-scrollbar {
+  display: none;
 }
 
 .filterTab {
@@ -89,6 +120,8 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 38px;
 }
 
 .filterTab:hover {
@@ -106,6 +139,14 @@
   font-weight: var(--font-weight-medium);
 }
 
+.filterLabelDesktop {
+  display: inline;
+}
+
+.filterLabelMobile {
+  display: none;
+}
+
 .filterCount {
   background: rgba(255, 255, 255, 0.2);
   color: inherit;
@@ -115,6 +156,7 @@
   font-weight: var(--font-weight-bold);
   min-width: 1.25rem;
   text-align: center;
+  line-height: 1;
 }
 
 .filterTab:not(.active) .filterCount {
@@ -122,11 +164,14 @@
   color: var(--color-text-secondary);
 }
 
-/* Sort Select */
+/* ===================== 
+   SORT SELECT 
+   ===================== */
 .sortSelect {
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .select {
@@ -134,14 +179,14 @@
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-sm)
-    var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-sm) var(--spacing-md);
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-fast);
-  min-width: 160px;
+  min-width: 120px;
+  height: 38px;
 }
 
 .select:hover {
@@ -162,7 +207,9 @@
   pointer-events: none;
 }
 
-/* Task Container */
+/* ===================== 
+   TASK CONTAINER 
+   ===================== */
 .taskContainer {
   animation: fadeIn 0.3s ease-out;
 }
@@ -179,7 +226,9 @@
   gap: var(--spacing-md);
 }
 
-/* Loading State */
+/* ===================== 
+   LOADING STATE 
+   ===================== */
 .loadingState {
   display: flex;
   flex-direction: column;
@@ -200,7 +249,9 @@
   margin-bottom: var(--spacing-md);
 }
 
-/* Empty State */
+/* ===================== 
+   EMPTY STATE 
+   ===================== */
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -235,7 +286,9 @@
   line-height: 1.5;
 }
 
-/* Results Summary */
+/* ===================== 
+   RESULTS SUMMARY 
+   ===================== */
 .resultsSummary {
   display: flex;
   justify-content: center;
@@ -252,51 +305,233 @@
   text-align: center;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
+/* ===================== 
+   RESPONSIVE DESIGN 
+   ===================== */
+
+/* Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .toolbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .toolbarRow {
+    flex: 0 0 auto;
+  }
+
+  .filterRow {
+    flex: 1;
+    max-width: 600px;
+    margin: 0 var(--spacing-lg);
+  }
+
+  .filterTabsContainer {
+    justify-content: center;
+  }
+
+  .viewLabel {
+    display: inline;
+  }
+}
+
+/* Desktop (1024px - 1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
   .gridView {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: var(--spacing-md);
   }
+
+  .toolbar {
+    gap: var(--spacing-md);
+  }
+
+  .select {
+    min-width: 110px;
+  }
 }
 
-@media (max-width: 768px) {
+/* Tablet (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
   .taskView {
     padding: var(--spacing-md);
   }
 
   .toolbar {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    align-items: stretch;
+    padding: var(--spacing-md);
   }
 
-  .toolbarLeft {
-    flex-direction: column;
-    gap: var(--spacing-md);
+  .filterLabelDesktop {
+    display: none;
   }
 
-  .filterTabs {
-    overflow-x: auto;
-    white-space: nowrap;
-    padding-bottom: var(--spacing-xs);
-  }
-
-  .filterTabs::-webkit-scrollbar {
-    height: 2px;
+  .filterLabelMobile {
+    display: inline;
   }
 
   .gridView {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
 
-  .sortSelect {
-    align-self: flex-end;
+  .select {
+    min-width: 100px;
+  }
+
+  .viewButton {
+    padding: var(--spacing-sm);
+  }
+
+  .viewLabel {
+    display: none;
   }
 }
 
-@media (max-width: 480px) {
+/* Mobile Large (640px - 767px) */
+@media (min-width: 640px) and (max-width: 767px) {
+  .taskView {
+    padding: var(--spacing-sm);
+  }
+
+  .toolbar {
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .toolbarRow {
+    gap: var(--spacing-sm);
+  }
+
+  .filterLabelDesktop {
+    display: none;
+  }
+
+  .filterLabelMobile {
+    display: inline;
+  }
+
+  .filterTab {
+    padding: var(--spacing-sm);
+    gap: 4px;
+  }
+
+  .filterCount {
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+
+  .gridView {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .select {
+    min-width: 90px;
+    font-size: var(--font-size-xs);
+  }
+
+  .viewButton {
+    padding: var(--spacing-sm);
+  }
+
+  .viewLabel {
+    display: none;
+  }
+}
+
+/* Mobile (480px - 639px) */
+@media (min-width: 480px) and (max-width: 639px) {
+  .taskView {
+    padding: var(--spacing-sm);
+  }
+
+  .toolbar {
+    padding: var(--spacing-sm);
+  }
+
+  .toolbarRow {
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .viewToggle {
+    order: 1;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .viewButton {
+    flex: 1;
+    justify-content: center;
+    padding: var(--spacing-sm);
+  }
+
+  .sortSelect {
+    order: 2;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .select {
+    width: 100%;
+    min-width: auto;
+    font-size: var(--font-size-xs);
+  }
+
+  .filterRow {
+    order: 3;
+    width: 100%;
+  }
+
+  .filterLabelDesktop {
+    display: none;
+  }
+
+  .filterLabelMobile {
+    display: inline;
+  }
+
+  .filterTab {
+    padding: var(--spacing-sm);
+    gap: 4px;
+    font-size: var(--font-size-xs);
+  }
+
+  .filterCount {
+    padding: 1px 4px;
+    font-size: 9px;
+    min-width: 1rem;
+  }
+
+  .gridView {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .viewLabel {
+    display: none;
+  }
+}
+
+/* Mobile Small (320px - 479px) */
+@media (max-width: 479px) {
+  .taskView {
+    padding: var(--spacing-xs);
+    gap: var(--spacing-md);
+  }
+
+  .toolbar {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs);
+  }
+
+  .toolbarRow {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    align-items: stretch;
+  }
+
   .viewToggle {
     width: 100%;
   }
@@ -304,39 +539,94 @@
   .viewButton {
     flex: 1;
     justify-content: center;
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
   }
 
-  .filterTabs {
-    justify-content: flex-start;
-  }
-
-  .filterTab {
-    flex-shrink: 0;
-  }
-
-  .gridView {
-    grid-template-columns: 1fr;
+  .sortSelect {
+    width: 100%;
   }
 
   .select {
     width: 100%;
-    min-width: auto;
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-sm);
+  }
+
+  .filterTabsContainer {
+    width: 100%;
+  }
+
+  .filterTabs {
+    justify-content: flex-start;
+    padding: var(--spacing-xs);
+  }
+
+  .filterTab {
+    flex-shrink: 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    gap: 2px;
+  }
+
+  .filterLabelDesktop {
+    display: none;
+  }
+
+  .filterLabelMobile {
+    display: inline;
+  }
+
+  .filterCount {
+    padding: 1px 3px;
+    font-size: 8px;
+    min-width: 0.875rem;
+  }
+
+  .gridView {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
   }
 
   .emptyState {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
   }
 
   .emptyIcon {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .emptyState h3 {
+    font-size: var(--font-size-md);
+  }
+
+  .emptyState p {
+    font-size: var(--font-size-xs);
+  }
+
+  .viewLabel {
+    display: none;
   }
 }
 
-/* Animations */
+/* ===================== 
+   ANIMATIONS 
+   ===================== */
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -350,7 +640,9 @@
   }
 }
 
-/* Dark Mode Adjustments */
+/* ===================== 
+   DARK MODE 
+   ===================== */
 [data-theme='dark'] .toolbar {
   background: var(--color-bg-primary);
   border-color: var(--color-border);
@@ -381,4 +673,33 @@
 [data-theme='dark'] .resultsSummary {
   background: var(--color-bg-secondary);
   border-color: var(--color-border);
+}
+
+/* ===================== 
+   ACCESSIBILITY 
+   ===================== */
+@media (prefers-reduced-motion: reduce) {
+  .taskContainer {
+    animation: none;
+  }
+  
+  .loadingSpinner {
+    animation: none;
+  }
+}
+
+/* Focus styles */
+.viewButton:focus,
+.filterTab:focus,
+.select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .filterTab,
+  .viewButton {
+    border: 1px solid var(--color-border);
+  }
 }

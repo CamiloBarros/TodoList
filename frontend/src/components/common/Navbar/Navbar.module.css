@@ -1,8 +1,8 @@
-/* Modern Navbar Styles */
+/* Enhanced Responsive Navbar Styles */
 .navbar {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 5000; /* Aumentado para consistencia */
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--color-border);
@@ -10,7 +10,9 @@
   transition: all 0.3s ease;
 }
 
-/* Desktop Navigation */
+/* ===================== 
+   DESKTOP NAVIGATION 
+   ===================== */
 .desktopNav {
   display: flex;
   align-items: center;
@@ -18,15 +20,22 @@
   padding: 0.75rem 2rem;
   max-width: 100%;
   margin: 0 auto;
-  gap: 2rem;
+  gap: 1rem;
+  min-height: 60px;
 }
 
 /* Brand Section */
+.brandContainer {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 200px;
+  min-width: fit-content;
 }
 
 .brandLink {
@@ -47,6 +56,7 @@
 .brandIcon {
   color: var(--color-primary);
   filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+  flex-shrink: 0;
 }
 
 .brandText {
@@ -54,6 +64,17 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
+}
+
+.brandTextCompact {
+  background: linear-gradient(135deg, var(--color-primary), #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.25rem;
+  white-space: nowrap;
+  display: none; /* Hidden by default, shown on tablets */
 }
 
 .brandSubtext {
@@ -73,7 +94,7 @@
   gap: 0.5rem;
   flex: 1;
   justify-content: center;
-  max-width: 600px;
+  max-width: 500px;
 }
 
 .navLink {
@@ -89,6 +110,7 @@
   transition: all 0.2s ease;
   position: relative;
   white-space: nowrap;
+  min-width: fit-content;
 }
 
 .navLink:hover {
@@ -123,56 +145,20 @@
   animation: pulse 2s infinite;
 }
 
-/* Search Section */
-.searchSection {
-  flex: 1;
-  max-width: 300px;
-  margin: 0 1rem;
-}
+/* ===================== 
+   TABLET NAVIGATION 
+   ===================== */
 
-.searchForm {
-  width: 100%;
-}
+/* Tablet styles are handled by media queries below */
 
-.searchWrapper {
-  position: relative;
-  width: 100%;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: white;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-secondary);
-  pointer-events: none;
-}
-
-/* Right Section */
+/* ===================== 
+   RIGHT SECTION 
+   ===================== */
 .rightSection {
   display: flex;
   align-items: center;
   gap: 1rem;
-  min-width: 300px;
-  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .quickActions {
@@ -185,6 +171,7 @@
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  white-space: nowrap;
 }
 
 .createButtonText {
@@ -204,6 +191,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  flex-shrink: 0;
 }
 
 .iconButton:hover {
@@ -212,26 +200,10 @@
   transform: translateY(-1px);
 }
 
-.notificationBadge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background: var(--color-danger);
-  color: white;
-  font-size: 0.6rem;
-  font-weight: 600;
-  padding: 0.1rem 0.3rem;
-  border-radius: var(--radius-full);
-  min-width: 1rem;
-  height: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* Profile Section */
 .profileSection {
   position: relative;
+  flex-shrink: 0;
 }
 
 .profileButton {
@@ -244,6 +216,7 @@
   background: transparent;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: fit-content;
 }
 
 .profileButton:hover {
@@ -262,6 +235,7 @@
   font-weight: 600;
   font-size: 1rem;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
 }
 
 .userInfo {
@@ -269,17 +243,26 @@
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  min-width: 0; /* Allow text truncation */
 }
 
 .userName {
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .userEmail {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 /* Profile Dropdown */
@@ -294,7 +277,7 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   min-width: 200px;
   padding: 0.5rem;
-  z-index: 1001;
+  z-index: 5001; /* Por encima del navbar pero debajo del mobile menu */
   animation: slideDown 0.2s ease;
 }
 
@@ -319,12 +302,6 @@
   background: var(--color-bg-secondary);
 }
 
-.dropdownSeparator {
-  margin: 0.5rem 0;
-  border: none;
-  border-top: 1px solid var(--color-border);
-}
-
 .logoutItem {
   color: var(--color-danger);
 }
@@ -333,9 +310,23 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* Mobile Navigation */
+/* ===================== 
+   MOBILE NAVIGATION 
+   ===================== */
 .mobileNav {
   display: none;
+  position: relative; /* Asegurar contexto de posicionamiento */
+}
+
+/* Show mobile nav on mobile screens */
+@media (max-width: 767px) {
+  .mobileNav {
+    display: block !important;
+  }
+  
+  .desktopNav {
+    display: none !important;
+  }
 }
 
 .mobileHeader {
@@ -343,6 +334,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
+  min-height: 60px;
 }
 
 .mobileBrand {
@@ -405,29 +397,35 @@
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1002;
+  z-index: 99999; /* Muy alto para estar por encima de todo */
   animation: fadeIn 0.3s ease;
+  overflow: hidden; /* Previene cualquier scroll */
 }
 
 .mobileMenuContent {
-  position: absolute;
+  position: fixed; /* Cambiado de absolute a fixed */
   top: 0;
   right: 0;
-  width: 80%;
-  max-width: 320px;
-  height: 100%;
+  width: 85%;
+  max-width: 350px;
+  height: 100vh; /* Altura completa de la pantalla */
   background: white;
   padding: 2rem 1.5rem;
   overflow-y: auto;
   animation: slideInRight 0.3s ease;
+  z-index: 100000; /* Asegurar que esté por encima del overlay */
+  box-shadow: -5px 0 50px rgba(0, 0, 0, 0.3); /* Sombra hacia la izquierda */
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .mobileUserSection {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1.5rem;
   background: var(--color-bg-secondary);
   border-radius: var(--radius-lg);
   margin-bottom: 2rem;
@@ -444,59 +442,30 @@
   justify-content: center;
   font-weight: 600;
   font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
 .mobileUserInfo {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .mobileUserName {
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mobileUserEmail {
   font-size: 0.8rem;
   color: var(--color-text-secondary);
-}
-
-/* Mobile Search */
-.mobileSearchSection {
-  margin-bottom: 2rem;
-}
-
-.mobileSearchForm {
-  width: 100%;
-}
-
-.mobileSearchWrapper {
-  position: relative;
-}
-
-.mobileSearchInput {
-  width: 100%;
-  padding: 0.875rem 1rem 0.875rem 2.5rem;
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  font-size: 1rem;
-}
-
-.mobileSearchInput:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.mobileSearchIcon {
-  position: absolute;
-  left: 0.875rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Mobile Navigation Links */
@@ -511,7 +480,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   border-radius: var(--radius-lg);
   text-decoration: none;
   color: var(--color-text-primary);
@@ -557,7 +526,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   border: none;
   border-radius: var(--radius-lg);
   background: transparent;
@@ -582,49 +551,205 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
+/* ===================== 
+   RESPONSIVE BREAKPOINTS 
+   ===================== */
+
+/* Mobile screens (0px - 767px) */
+@media (max-width: 767px) {
+  .desktopNav {
+    display: none !important;
+  }
+  
+  .mobileNav {
+    display: block !important;
+  }
+}
+
+/* Tablet screens (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
   .desktopNav {
     padding: 0.75rem 1.5rem;
     gap: 1rem;
   }
 
-  .navLinks {
-    gap: 0.25rem;
+  .brandContainer {
+    min-width: 120px;
   }
 
-  .navLink {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-  }
-
-  .searchSection {
-    max-width: 200px;
-  }
-
-  .createButtonText {
-    display: none;
+  .rightSection {
+    min-width: 200px;
+    justify-content: flex-end;
   }
 
   .userInfo {
     display: none;
   }
-}
 
-@media (max-width: 768px) {
-  .desktopNav {
+  .createButtonText {
     display: none;
   }
-
-  .mobileNav {
-    display: block;
+  
+  .brandText {
+    display: none;
+  }
+  
+  .brandTextCompact {
+    display: inline;
   }
 }
 
-/* Animations */
+/* Desktop screens (1024px - 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .desktopNav {
+    padding: 0.75rem 2rem;
+    gap: 1.5rem;
+  }
+
+  .brandContainer {
+    min-width: 200px;
+  }
+
+  .navLinks {
+    max-width: 400px;
+  }
+
+  .rightSection {
+    min-width: 250px;
+    justify-content: flex-end;
+  }
+  
+  .brandTextCompact {
+    display: none;
+  }
+  
+  .brandText {
+    display: inline;
+  }
+}
+
+/* Large screens (1280px+) */
+@media (min-width: 1280px) {
+  .desktopNav {
+    padding: 0.75rem 3rem;
+    gap: 2rem;
+  }
+
+  .brandContainer {
+    min-width: 250px;
+  }
+
+  .navLinks {
+    max-width: 600px;
+  }
+
+  .rightSection {
+    min-width: 350px;
+    justify-content: flex-end;
+  }
+  
+  .brandTextCompact {
+    display: none;
+  }
+  
+  .brandText {
+    display: inline;
+  }
+}
+
+/* ===================== 
+   DARK MODE SUPPORT 
+   ===================== */
+.navbar[data-theme='dark'] {
+  background: rgba(17, 24, 39, 0.95);
+  border-bottom-color: rgba(75, 85, 99, 0.3);
+}
+
+.navbar[data-theme='dark'] .iconButton {
+  background: rgba(55, 65, 81, 0.8);
+  color: rgba(156, 163, 175, 1);
+}
+
+.navbar[data-theme='dark'] .iconButton:hover {
+  background: rgba(75, 85, 99, 0.8);
+  color: rgba(243, 244, 246, 1);
+}
+
+.navbar[data-theme='dark'] .navLink {
+  color: rgba(156, 163, 175, 1);
+}
+
+.navbar[data-theme='dark'] .navLink:hover {
+  background: rgba(55, 65, 81, 0.8);
+  color: rgba(243, 244, 246, 1);
+}
+
+.navbar[data-theme='dark'] .profileButton:hover {
+  background: rgba(55, 65, 81, 0.8);
+}
+
+.navbar[data-theme='dark'] .userName {
+  color: rgba(243, 244, 246, 1);
+}
+
+.navbar[data-theme='dark'] .userEmail {
+  color: rgba(156, 163, 175, 1);
+}
+
+.navbar[data-theme='dark'] .brandText,
+.navbar[data-theme='dark'] .brandTextCompact {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar[data-theme='dark'] .profileDropdown,
+.navbar[data-theme='dark'] .mobileMenuContent {
+  background: rgba(31, 41, 55, 0.98); /* Fondo más sólido */
+  border-color: rgba(75, 85, 99, 0.3);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(75, 85, 99, 0.3); /* Añadir borde para mejor definición */
+}
+
+.navbar[data-theme='dark'] .mobileMenuOverlay {
+  background: rgba(0, 0, 0, 0.75); /* Más oscuro para mejor contraste */
+  backdrop-filter: blur(4px); /* Desenfoque más fuerte en modo oscuro */
+}
+
+.navbar[data-theme='dark'] .mobileNavLink {
+  color: rgba(243, 244, 246, 1);
+}
+
+.navbar[data-theme='dark'] .mobileNavLink:hover {
+  background: rgba(55, 65, 81, 0.8);
+}
+
+.navbar[data-theme='dark'] .mobileActionButton {
+  color: rgba(243, 244, 246, 1);
+}
+
+.navbar[data-theme='dark'] .mobileActionButton:hover {
+  background: rgba(55, 65, 81, 0.8);
+}
+
+.navbar[data-theme='dark'] .mobileUserSection {
+  background: rgba(55, 65, 81, 0.8);
+}
+
+.navbar[data-theme='dark'] .mobileUserName {
+  color: rgba(243, 244, 246, 1);
+}
+
+.navbar[data-theme='dark'] .mobileUserEmail {
+  color: rgba(156, 163, 175, 1);
+}
+
+/* ===================== 
+   ANIMATIONS 
+   ===================== */
 @keyframes pulse {
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
   }
   50% {
@@ -646,40 +771,101 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
+    backdrop-filter: blur(0px);
   }
   to {
     opacity: 1;
+    backdrop-filter: blur(2px);
   }
 }
 
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
+    box-shadow: -5px 0 50px rgba(0, 0, 0, 0);
   }
   to {
     transform: translateX(0);
+    box-shadow: -5px 0 50px rgba(0, 0, 0, 0.3);
   }
 }
 
-/* Dark Mode Support */
-.navbar[data-theme='dark'] {
-  background: rgba(17, 24, 39, 0.95);
-  border-bottom-color: rgba(75, 85, 99, 0.3);
+/* ===================== 
+   UTILITY CLASSES 
+   ===================== */
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.navbar[data-theme='dark'] .searchInput {
-  background: rgba(31, 41, 55, 0.8);
-  border-color: rgba(75, 85, 99, 0.3);
+.flex-shrink-0 {
+  flex-shrink: 0;
 }
 
-.navbar[data-theme='dark'] .searchInput:focus {
-  background: rgba(31, 41, 55, 1);
-  border-color: var(--color-primary);
+.min-width-0 {
+  min-width: 0;
 }
 
-.navbar[data-theme='dark'] .profileDropdown,
-.navbar[data-theme='dark'] .mobileMenuContent {
-  background: rgba(31, 41, 55, 0.95);
-  border-color: rgba(75, 85, 99, 0.3);
-  backdrop-filter: blur(20px);
+/* Z-index hierarchy for mobile menu */
+.mobile-menu-open {
+  overflow: hidden !important;
+  position: fixed !important; /* Previene cualquier scroll del body */
+  width: 100% !important;
+}
+
+/* Ensure mobile menu is always on top */
+.mobileMenuOverlay {
+  isolation: isolate; /* Creates new stacking context */
+  backdrop-filter: blur(2px); /* Efecto de desenfoque sutil */
+}
+
+.mobileMenuContent {
+  position: relative;
+  z-index: 1; /* Relative to its stacking context */
+}
+
+/* Prevent any interference from parent containers */
+.navbar {
+  contain: layout style; /* CSS containment for better performance */
+}
+
+.mobileNav {
+  contain: none; /* Allow the mobile menu to escape */
+}
+
+/* ===================== 
+   ACCESSIBILITY 
+   ===================== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for accessibility */
+.navLink:focus,
+.iconButton:focus,
+.profileButton:focus,
+.mobileActionButton:focus,
+.tabletNavButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .navbar {
+    border-bottom-width: 2px;
+  }
+  
+  .navLink, .iconButton, .profileButton {
+    border: 1px solid transparent;
+  }
+  
+  .navLink:hover, .iconButton:hover, .profileButton:hover {
+    border-color: var(--color-primary);
+  }
 }

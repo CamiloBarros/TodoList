@@ -7,8 +7,7 @@ import { toast } from 'react-hot-toast'
 
 import { tagService } from '../../services/tagService'
 import type { Tag, TagCreate } from '../../types'
-import Button from '../ui/Button'
-import Input from '../ui/Input'
+import { Button, Input } from '@/components/common/'
 import styles from './CreateTagModal.module.css'
 
 interface CreateTagModalProps {

@@ -5,9 +5,6 @@ import {
   X,
   Home,
   CheckSquare,
-  Folder,
-  Tags,
-  BarChart3,
   Settings,
   User,
   LogOut,
@@ -17,8 +14,8 @@ import {
   Search,
   Plus,
 } from 'lucide-react'
-import { useAuth } from '../../hooks/useAuth'
-import Button from './Button'
+import { useAuth } from '@/hooks/useAuth'
+import { Button } from '../'
 import styles from './Navbar.module.css'
 
 interface NavItem {
@@ -54,6 +51,36 @@ export const Navbar: React.FC<NavbarProps> = ({
     setIsMobileMenuOpen(false)
   }, [location.pathname])
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      // Obtener la posición actual del scroll antes de bloquear
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      document.body.classList.add('mobile-menu-open')
+    } else {
+      // Restaurar el scroll a su posición original
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.classList.remove('mobile-menu-open')
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.classList.remove('mobile-menu-open')
+    }
+  }, [isMobileMenuOpen])
+
   // Close profile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -69,6 +96,18 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Close mobile menu with Escape key
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscapeKey)
+    return () => document.removeEventListener('keydown', handleEscapeKey)
+  }, [isMobileMenuOpen])
+
   const navigationItems: NavItem[] = [
     {
       icon: Home,
@@ -83,24 +122,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       count: pendingCount,
       isActive: location.pathname === '/tasks',
     },
-    {
-      icon: Folder,
-      label: 'Categories',
-      path: '/dashboard/categories',
-      isActive: location.pathname.includes('/categories'),
-    },
-    {
-      icon: Tags,
-      label: 'Tags',
-      path: '/dashboard/tags',
-      isActive: location.pathname.includes('/tags'),
-    },
-    {
-      icon: BarChart3,
-      label: 'Analytics',
-      path: '/dashboard/analytics',
-      isActive: location.pathname.includes('/analytics'),
-    },
   ]
 
   const handleLogout = () => {
@@ -111,24 +132,29 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement search functionality
     console.log('Searching for:', searchQuery)
   }
 
   return (
-    <nav className={styles.navbar}>
-      {/* Desktop Navigation */}
+    <nav 
+      className={styles.navbar} 
+      data-theme={isDarkMode ? 'dark' : 'light'}
+    >
+      {/* Desktop and Tablet Navigation */}
       <div className={styles.desktopNav}>
         {/* Brand Section */}
-        <div className={styles.brand}>
-          <Link to='/dashboard' className={styles.brandLink}>
-            <CheckSquare className={styles.brandIcon} size={28} />
-            <span className={styles.brandText}>TodoApp</span>
-          </Link>
-          <span className={styles.brandSubtext}>Pro</span>
+        <div className={styles.brandContainer}>
+          <div className={styles.brand}>
+            <Link to='/dashboard' className={styles.brandLink}>
+              <CheckSquare className={styles.brandIcon} size={28} />
+              <span className={styles.brandText}>TodoApp</span>
+              <span className={styles.brandTextCompact}>Todo</span>
+            </Link>
+            <span className={styles.brandSubtext}>Pro</span>
+          </div>
         </div>
 
-        {/* Main Navigation Links */}
+        {/* Navigation Links */}
         <div className={styles.navLinks}>
           {navigationItems.map((item) => {
             const IconComponent = item.icon
@@ -150,22 +176,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </div>
 
-        {/* Search Bar */}
-        <div className={styles.searchSection}>
-          <form onSubmit={handleSearch} className={styles.searchForm}>
-            <div className={styles.searchWrapper}>
-              <Search size={18} className={styles.searchIcon} />
-              <input
-                type='text'
-                placeholder='Search tasks...'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
-              />
-            </div>
-          </form>
-        </div>
-
         {/* Right Section */}
         <div className={styles.rightSection}>
           {/* Quick Actions */}
@@ -183,16 +193,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onToggleTheme}
               className={styles.iconButton}
-              title={
-                isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'
-              }
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
-            <button className={styles.iconButton} title='Notifications'>
-              <Bell size={18} />
-              <span className={styles.notificationBadge}>3</span>
             </button>
           </div>
 
@@ -206,7 +209,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </div>
               <div className={styles.userInfo}>
-                <span className={styles.userName}>{user?.name || 'User'}</span>
+                <span className={styles.userName}>
+                  {user?.name || 'User'}
+                </span>
                 <span className={styles.userEmail}>{user?.email}</span>
               </div>
             </button>
@@ -214,23 +219,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Profile Dropdown */}
             {isProfileMenuOpen && (
               <div className={styles.profileDropdown}>
-                <Link
-                  to='/dashboard/profile'
-                  className={styles.dropdownItem}
-                  onClick={() => setIsProfileMenuOpen(false)}
-                >
-                  <User size={16} />
-                  Profile
-                </Link>
-                <Link
-                  to='/dashboard/settings'
-                  className={styles.dropdownItem}
-                  onClick={() => setIsProfileMenuOpen(false)}
-                >
-                  <Settings size={16} />
-                  Settings
-                </Link>
-                <hr className={styles.dropdownSeparator} />
                 <button
                   onClick={handleLogout}
                   className={`${styles.dropdownItem} ${styles.logoutItem}`}
@@ -250,7 +238,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className={styles.mobileHeader}>
           <Link to='/dashboard' className={styles.mobileBrand}>
             <CheckSquare size={24} />
-            <span>TodoApp</span>
+            <span>Todo</span>
           </Link>
 
           <div className={styles.mobileActions}>
@@ -272,8 +260,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className={styles.mobileMenuOverlay}>
-            <div className={styles.mobileMenuContent}>
+          <div 
+            className={styles.mobileMenuOverlay}
+            onClick={() => setIsMobileMenuOpen(false)} // Cierra al hacer click en el overlay
+          >
+            <div 
+              className={styles.mobileMenuContent}
+              onClick={(e) => e.stopPropagation()} // Previene que se cierre al hacer click en el contenido
+            >
               {/* User Section */}
               <div className={styles.mobileUserSection}>
                 <div className={styles.mobileUserAvatar}>
@@ -285,25 +279,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                   <span className={styles.mobileUserEmail}>{user?.email}</span>
                 </div>
-              </div>
-
-              {/* Search */}
-              <div className={styles.mobileSearchSection}>
-                <form
-                  onSubmit={handleSearch}
-                  className={styles.mobileSearchForm}
-                >
-                  <div className={styles.mobileSearchWrapper}>
-                    <Search size={18} className={styles.mobileSearchIcon} />
-                    <input
-                      type='text'
-                      placeholder='Search tasks...'
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className={styles.mobileSearchInput}
-                    />
-                  </div>
-                </form>
               </div>
 
               {/* Navigation Links */}
@@ -337,25 +312,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
                   {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                 </button>
-                <button className={styles.mobileActionButton}>
-                  <Bell size={18} />
-                  Notifications
-                  <span className={styles.mobileBadge}>3</span>
-                </button>
-                <Link
-                  to='/dashboard/profile'
-                  className={styles.mobileActionButton}
-                >
-                  <User size={18} />
-                  Profile
-                </Link>
-                <Link
-                  to='/dashboard/settings'
-                  className={styles.mobileActionButton}
-                >
-                  <Settings size={18} />
-                  Settings
-                </Link>
                 <button
                   onClick={handleLogout}
                   className={`${styles.mobileActionButton} ${styles.mobileLogoutButton}`}

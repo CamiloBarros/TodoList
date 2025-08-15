@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Navbar } from '../ui'
+import { Navbar } from '../common'
 import styles from './DashboardLayout.module.css'
 
 interface DashboardLayoutProps {

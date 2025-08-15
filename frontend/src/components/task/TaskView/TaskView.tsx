@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Grid3X3, List, Filter, SortAsc } from 'lucide-react'
-import type { Task } from '../../types'
-import { TaskCard } from './TaskCard'
+import type { Task } from '../../../types'
+import { TaskCard } from '../TaskCard/TaskCard'
 import styles from './TaskView.module.css'
 
 interface TaskViewProps {
@@ -15,6 +15,22 @@ interface TaskViewProps {
 type ViewMode = 'grid' | 'list'
 type SortOption = 'created' | 'due_date' | 'priority' | 'title'
 type FilterOption = 'all' | 'pending' | 'completed' | 'overdue' | 'today'
+
+const FILTER_LABELS = {
+  all: 'All',
+  pending: 'Pending',
+  completed: 'Done',
+  overdue: 'Overdue',
+  today: 'Today',
+} as const
+
+const FILTER_LABELS_MOBILE = {
+  all: 'All',
+  pending: 'Todo',
+  completed: 'Done',
+  overdue: 'Late',
+  today: 'Today',
+} as const
 
 export const TaskView: React.FC<TaskViewProps> = ({
   tasks,
@@ -101,6 +117,15 @@ export const TaskView: React.FC<TaskViewProps> = ({
     }
   }
 
+  // All filters available
+  const allFilters: FilterOption[] = [
+    'all',
+    'pending',
+    'completed',
+    'overdue',
+    'today',
+  ]
+
   if (loading) {
     return (
       <div className={styles.taskView}>
@@ -116,7 +141,8 @@ export const TaskView: React.FC<TaskViewProps> = ({
     <div className={styles.taskView}>
       {/* Toolbar */}
       <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
+        {/* Mobile First Row */}
+        <div className={styles.toolbarRow}>
           <div className={styles.viewToggle}>
             <button
               className={`${styles.viewButton} ${
@@ -126,6 +152,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               title='Grid view'
             >
               <Grid3X3 size={18} />
+              <span className={styles.viewLabel}>Grid</span>
             </button>
             <button
               className={`${styles.viewButton} ${
@@ -135,50 +162,51 @@ export const TaskView: React.FC<TaskViewProps> = ({
               title='List view'
             >
               <List size={18} />
+              <span className={styles.viewLabel}>List</span>
             </button>
           </div>
 
-          <div className={styles.filterTabs}>
-            {(
-              [
-                'all',
-                'pending',
-                'completed',
-                'overdue',
-                'today',
-              ] as FilterOption[]
-            ).map((filter) => (
-              <button
-                key={filter}
-                className={`${styles.filterTab} ${
-                  filterBy === filter ? styles.active : ''
-                }`}
-                onClick={() => setFilterBy(filter)}
-              >
-                <span className={styles.filterLabel}>
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </span>
-                <span className={styles.filterCount}>
-                  {getFilterCount(filter)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.toolbarRight}>
           <div className={styles.sortSelect}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className={styles.select}
             >
-              <option value='created'>Sort by Created</option>
-              <option value='due_date'>Sort by Due Date</option>
-              <option value='priority'>Sort by Priority</option>
-              <option value='title'>Sort by Title</option>
+              <option value='created'>Recent</option>
+              <option value='due_date'>Due Date</option>
+              <option value='priority'>Priority</option>
+              <option value='title'>Title</option>
             </select>
             <SortAsc size={16} className={styles.sortIcon} />
+          </div>
+        </div>
+
+        {/* Filter Tabs Row */}
+        <div className={styles.filterRow}>
+          <div className={styles.filterTabsContainer}>
+            <div className={styles.filterTabs}>
+              {allFilters.map((filter) => (
+                <button
+                  key={filter}
+                  className={`${styles.filterTab} ${
+                    filterBy === filter ? styles.active : ''
+                  }`}
+                  onClick={() => setFilterBy(filter)}
+                >
+                  <span className={styles.filterLabel}>
+                    <span className={styles.filterLabelDesktop}>
+                      {FILTER_LABELS[filter]}
+                    </span>
+                    <span className={styles.filterLabelMobile}>
+                      {FILTER_LABELS_MOBILE[filter]}
+                    </span>
+                  </span>
+                  <span className={styles.filterCount}>
+                    {getFilterCount(filter)}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

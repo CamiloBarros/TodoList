@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react'
-import type { Notification as NotificationType } from '../../types'
-import { useNotifications } from '../../hooks/useNotifications'
+import type { Notification as NotificationType } from '@/types'
+import { useNotifications } from '@/hooks/useNotifications'
 import styles from './Notification.module.css'
 
 interface NotificationItemProps {

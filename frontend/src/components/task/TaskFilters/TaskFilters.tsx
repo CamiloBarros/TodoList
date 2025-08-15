@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Search } from 'lucide-react'
-import { Input, Select } from '../ui'
-import { categoryService, tagService } from '../../services'
-import type { TaskFilters, Category, Tag } from '../../types'
+import { Input, Select } from '@/components/common'
+import { categoryService, tagService } from '@/services'
+import type { TaskFilters, Category, Tag } from '@/types'
 import styles from './TaskFilters.module.css'
 
 interface TaskFiltersProps {

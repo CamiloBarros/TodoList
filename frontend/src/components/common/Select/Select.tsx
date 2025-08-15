@@ -1,6 +1,6 @@
 import React from 'react'
 import { ChevronDown } from 'lucide-react'
-import type { SelectProps } from '../../types'
+import type { SelectProps } from '@/types'
 import styles from './Select.module.css'
 
 interface ExtendedSelectProps extends SelectProps {

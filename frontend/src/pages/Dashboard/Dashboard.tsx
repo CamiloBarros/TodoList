@@ -2,18 +2,18 @@ import React, { useState } from 'react'
 import { Plus, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useAuth } from '../hooks/useAuth'
-import { useTasks } from '../hooks/useTasks'
-import { Button, Modal } from '../components/ui'
-import { TaskForm, TaskView, TaskFilters } from '../components/task'
-import { DashboardLayout } from '../components/layout'
+import { useAuth } from '@/hooks/useAuth'
+import { useTasks } from '@/hooks/useTasks'
+import { Button, Modal } from '@/components/common'
+import { TaskForm, TaskView, TaskFilters } from '@/components/task'
+import { DashboardLayout } from '@/components/layout'
 import type {
   Task,
   TaskFilters as TaskFiltersType,
   TaskCreate,
   TaskUpdate,
-} from '../types'
-import { getErrorMessage } from '../utils/helpers'
+} from '@/types'
+import { getErrorMessage } from '@/utils/helpers'
 import styles from './Dashboard.module.css'
 
 const DashboardPage: React.FC = () => {

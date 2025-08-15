@@ -2,11 +2,8 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './hooks/useAuth'
-import LoginPage from './pages/Login'
-import RegisterPage from './pages/Register'
-import DashboardPage from './pages/Dashboard'
-import TasksPage from './pages/Tasks'
-import { Spinner } from './components/ui'
+import { DashboardPage, LoginPage, RegisterPage, TasksPage } from '@/pages'
+import { Spinner } from './components/common'
 
 // Component for protected routes
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({

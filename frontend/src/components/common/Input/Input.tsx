@@ -1,5 +1,5 @@
 import React from 'react'
-import type { InputProps } from '../../types'
+import type { InputProps } from '@/types'
 import styles from './Input.module.css'
 
 interface ExtendedInputProps extends InputProps {
