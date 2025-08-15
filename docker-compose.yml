@@ -1,6 +1,29 @@
 version: '3.8'
 
 services:
+  # Frontend (React + Vite, development mode)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    container_name: todolist_frontend
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000/api
+    networks:
+      - todolist_network
+    depends_on:
+      - backend
+    # Quick usage:
+    # - Access frontend at http://localhost:5173
+    # - Hot reload enabled. Edit code locally and see changes instantly.
+    # - VITE_API_URL must match backend URL for API calls.
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
