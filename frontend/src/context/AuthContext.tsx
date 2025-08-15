@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true)
       const authData = await authService.login(credentials)
 
+      // Save authentication data when login is successful
       setToken(authData.token)
       setUser(authData.user)
       authService.saveAuthData(authData)

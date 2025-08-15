@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'react-hot-toast'
 import { Mail, Lock, AlertCircle, CheckSquare } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Input, Button } from '../components/ui'
@@ -45,9 +46,21 @@ const LoginPage: React.FC = () => {
       }
 
       await login(credentials)
+
+      // Show success notification
+      toast.success('¡Bienvenido! Has iniciado sesión correctamente', {
+        duration: 3000,
+      })
+
       navigate('/dashboard')
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const errorMessage = getErrorMessage(err)
+      setError(errorMessage)
+
+      // Show error notification
+      toast.error(`Error al iniciar sesión: ${errorMessage}`, {
+        duration: 5000,
+      })
     } finally {
       setIsLoading(false)
     }
@@ -73,7 +86,10 @@ const LoginPage: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className={styles.form}
+        >
           <Input
             type='email'
             label='Email'

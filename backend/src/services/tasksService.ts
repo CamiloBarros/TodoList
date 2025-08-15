@@ -30,7 +30,7 @@ export const getTasks = async (
       due_date,
       search,
       tags,
-      
+
       sort_by = 'created_at',
       sort_direction = 'desc',
       page = 1,
@@ -328,6 +328,20 @@ export const createTask = async (
   taskData: TaskCreation
 ): Promise<ApiResponse<Task>> => {
   try {
+    // Validate due date (must be in the future)
+    if (taskData.due_date) {
+      const dueDate = new Date(taskData.due_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+
+      if (dueDate <= today) {
+        return {
+          success: false,
+          error: 'Due date must be in the future',
+        };
+      }
+    }
+
     // Validate that category belongs to user (if specified)
     if (taskData.category_id) {
       const categoryResult = await query(
@@ -431,6 +445,20 @@ export const updateTask = async (
         success: false,
         error: 'Task not found',
       };
+    }
+
+    // Validate due date (must be in the future)
+    if (updateData.due_date) {
+      const dueDate = new Date(updateData.due_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+
+      if (dueDate <= today) {
+        return {
+          success: false,
+          error: 'Due date must be in the future',
+        };
+      }
     }
 
     // Validate category if specified

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'react-hot-toast'
 import { Mail, Lock, User, AlertCircle, CheckSquare } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Input, Button } from '../components/ui'
@@ -58,9 +59,21 @@ const RegisterPage: React.FC = () => {
       }
 
       await registerUser(credentials)
+
+      // Show success notification
+      toast.success('¡Cuenta creada exitosamente! Bienvenido a TodoList', {
+        duration: 4000,
+      })
+
       navigate('/dashboard')
     } catch (err: unknown) {
-      setError(getErrorMessage(err))
+      const errorMessage = getErrorMessage(err)
+      setError(errorMessage)
+
+      // Show error notification
+      toast.error(`Error al crear la cuenta: ${errorMessage}`, {
+        duration: 5000,
+      })
     } finally {
       setIsLoading(false)
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { taskService } from '../services'
 import { useNotifications } from './useNotifications'
 import { getErrorMessage } from '../utils/helpers'
@@ -24,6 +24,10 @@ export const useTasks = (options: UseTasksOptions = {}) => {
   } = options
   const { addNotification } = useNotifications()
 
+  // Use ref to avoid including initialFilters in dependencies
+  const initialFiltersRef = useRef(initialFilters)
+  initialFiltersRef.current = initialFilters
+
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,7 +45,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         setLoading(true)
         setError(null)
 
-        const params = { ...initialFilters, ...filters }
+        const params = { ...initialFiltersRef.current, ...filters }
         const response = await taskService.getTasks(params)
 
         setTasks(response.data)
@@ -63,7 +67,7 @@ export const useTasks = (options: UseTasksOptions = {}) => {
         setLoading(false)
       }
     },
-    [initialFilters, addNotification]
+    [addNotification]
   )
 
   const createTask = async (task: TaskCreate) => {

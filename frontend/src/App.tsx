@@ -1,10 +1,11 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { useAuth } from './hooks/useAuth'
-import { NotificationContainer } from './components/ui'
 import LoginPage from './pages/Login'
 import RegisterPage from './pages/Register'
 import DashboardPage from './pages/Dashboard'
+import TasksPage from './pages/Tasks'
 import { Spinner } from './components/ui'
 
 // Component for protected routes
@@ -69,13 +70,51 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path='/tasks'
+          element={
+            <ProtectedRoute>
+              <TasksPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 route */}
         <Route path='*' element={<Navigate to='/dashboard' replace />} />
       </Routes>
 
       {/* Global notification system */}
-      <NotificationContainer />
+      <Toaster
+        position='top-right'
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'var(--color-bg-primary)',
+            color: 'var(--color-text-primary)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--font-size-sm)',
+          },
+          success: {
+            style: {
+              border: '1px solid var(--color-success)',
+            },
+            iconTheme: {
+              primary: 'var(--color-success)',
+              secondary: 'var(--color-bg-primary)',
+            },
+          },
+          error: {
+            style: {
+              border: '1px solid var(--color-danger)',
+            },
+            iconTheme: {
+              primary: 'var(--color-danger)',
+              secondary: 'var(--color-bg-primary)',
+            },
+          },
+        }}
+      />
     </>
   )
 }

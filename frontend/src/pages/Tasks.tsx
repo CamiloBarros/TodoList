@@ -1,27 +1,18 @@
 import React, { useState } from 'react'
-import { Plus, ArrowRight } from 'lucide-react'
+import { Plus, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import { useAuth } from '../hooks/useAuth'
 import { useTasks } from '../hooks/useTasks'
 import { Button, Modal } from '../components/ui'
-import { TaskForm, TaskView, TaskFilters } from '../components/task'
+import { TaskForm, TaskView } from '../components/task'
 import { DashboardLayout } from '../components/layout'
-import type {
-  Task,
-  TaskFilters as TaskFiltersType,
-  TaskCreate,
-  TaskUpdate,
-} from '../types'
+import type { Task, TaskCreate, TaskUpdate } from '../types'
 import { getErrorMessage } from '../utils/helpers'
-import styles from './Dashboard.module.css'
+import styles from './Tasks.module.css'
 
-const DashboardPage: React.FC = () => {
-  const { user } = useAuth()
+const TasksPage: React.FC = () => {
   const navigate = useNavigate()
-  const [filters, setFilters] = useState<TaskFiltersType>({})
   const [showTaskModal, setShowTaskModal] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [taskFormLoading, setTaskFormLoading] = useState(false)
 
@@ -29,8 +20,6 @@ const DashboardPage: React.FC = () => {
     tasks,
     loading,
     error,
-    pagination,
-    fetchTasks,
     createTask,
     updateTask,
     deleteTask,
@@ -123,30 +112,18 @@ const DashboardPage: React.FC = () => {
     }
   }
 
-  const handleFiltersChange = (newFilters: TaskFiltersType) => {
-    setFilters(newFilters)
-    // Fetch tasks with new filters
-    fetchTasks({ ...newFilters, page: 1 })
-  }
-
-  const handleResetFilters = () => {
-    setFilters({})
-    // Fetch all tasks without filters
-    fetchTasks({ page: 1 })
-  }
-
-  const handleGoToTasks = () => {
-    navigate('/tasks')
-  }
-
   const handleCloseModal = () => {
     setShowTaskModal(false)
     setEditingTask(null)
   }
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard')
+  }
+
   // Calculate task statistics
   const taskStats = {
-    total: pagination.total || 0,
+    total: tasks.length,
     completed: tasks.filter((task) => task.completed).length,
     pending: tasks.filter((task) => !task.completed).length,
     overdue: tasks.filter((task) => {
@@ -160,82 +137,74 @@ const DashboardPage: React.FC = () => {
       onCreateTask={handleCreateTask}
       pendingCount={taskStats.pending}
     >
-      <div className={styles.dashboard}>
+      <div className={styles.tasksPage}>
         {/* Header */}
         <header className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1>Task Dashboard</h1>
-            <p className={styles.subtitle}>
-              Welcome back, {user?.name || 'User'}!
-            </p>
+          <div className={styles.headerTop}>
+            <button
+              className={styles.backButton}
+              onClick={handleBackToDashboard}
+              title='Back to Dashboard'
+            >
+              <ArrowLeft size={20} />
+              <span>Back to Dashboard</span>
+            </button>
 
-            <div className={styles.quickActions}>
+            <div className={styles.headerActions}>
               <Button onClick={handleCreateTask} variant='primary' size='lg'>
                 <Plus size={20} />
-                Add New Task
+                New Task
               </Button>
-              <Button
-                onClick={() => setShowFilters(!showFilters)}
-                variant='secondary'
-                size='md'
-              >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
+            </div>
+          </div>
+
+          <div className={styles.headerContent}>
+            <div className={styles.titleSection}>
+              <h1>Task Management</h1>
+              <p className={styles.subtitle}>
+                Organize, track, and complete your tasks efficiently
+              </p>
+            </div>
+
+            {/* Quick Stats */}
+            <div className={styles.quickStats}>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>{taskStats.total}</span>
+                <span className={styles.statLabel}>Total</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={`${styles.statValue} ${styles.pending}`}>
+                  {taskStats.pending}
+                </span>
+                <span className={styles.statLabel}>Pending</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={`${styles.statValue} ${styles.completed}`}>
+                  {taskStats.completed}
+                </span>
+                <span className={styles.statLabel}>Completed</span>
+              </div>
+              {taskStats.overdue > 0 && (
+                <div className={styles.statItem}>
+                  <span className={`${styles.statValue} ${styles.overdue}`}>
+                    {taskStats.overdue}
+                  </span>
+                  <span className={styles.statLabel}>Overdue</span>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Task Statistics */}
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <h3>Total Tasks</h3>
-            <span className={styles.statNumber}>{taskStats.total}</span>
-          </div>
-          <div className={styles.statCard}>
-            <h3>Completed</h3>
-            <span className={`${styles.statNumber} ${styles.completed}`}>
-              {taskStats.completed}
-            </span>
-          </div>
-          <div className={styles.statCard}>
-            <h3>Pending</h3>
-            <span className={`${styles.statNumber} ${styles.inProgress}`}>
-              {taskStats.pending}
-            </span>
-          </div>
-          <div className={styles.statCard}>
-            <h3>Overdue</h3>
-            <span className={`${styles.statNumber} ${styles.overdue}`}>
-              {taskStats.overdue}
-            </span>
-          </div>
-          <div className={styles.statCard} onClick={handleGoToTasks}>
-            <h3>Task Manager</h3>
-            <div className={styles.statAction}>
-              <ArrowRight size={24} />
-              <span>View All Tasks</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        {showFilters && (
-          <div className={styles.filtersSection}>
-            <TaskFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              onReset={handleResetFilters}
-            />
-          </div>
-        )}
-
         {/* Error Display */}
         {error && (
-          <div className={styles.error}>Error: {getErrorMessage(error)}</div>
+          <div className={styles.error}>
+            <span>Error: {getErrorMessage(error)}</span>
+          </div>
         )}
 
-        {/* Task Management with Modern View */}
-        <div className={styles.taskManagement}>
+        {/* Main Task View */}
+        <main className={styles.mainContent}>
           <TaskView
             tasks={tasks}
             onToggleComplete={handleToggleTask}
@@ -243,7 +212,7 @@ const DashboardPage: React.FC = () => {
             onDelete={handleDeleteTask}
             loading={loading}
           />
-        </div>
+        </main>
 
         {/* Task Form Modal */}
         <Modal
@@ -264,4 +233,4 @@ const DashboardPage: React.FC = () => {
   )
 }
 
-export default DashboardPage
+export default TasksPage

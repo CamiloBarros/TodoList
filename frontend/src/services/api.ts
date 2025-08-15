@@ -31,11 +31,20 @@ api.interceptors.response.use(
     return response
   },
   (error: AxiosError<ApiError>) => {
-    // If token has expired or is invalid, redirect to login
+    // Only redirect to login if it's a 401 error AND it's NOT a login/register request
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
+      const isAuthRequest =
+        error.config?.url?.includes('/auth/login') ||
+        error.config?.url?.includes('/auth/register')
+
+      // If it's NOT an auth request (login/register), then it's likely an expired token
+      if (!isAuthRequest) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        window.location.href = '/login'
+      }
+      // If it IS an auth request, just let the error propagate normally
+      // without redirecting (let the login form handle the error)
     }
 
     return Promise.reject(error)

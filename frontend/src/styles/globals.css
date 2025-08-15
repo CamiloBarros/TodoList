@@ -3,6 +3,7 @@
   /* Colores principales */
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
+  --color-primary-dark: #1e40af;
   --color-primary-light: #dbeafe;
 
   --color-secondary: #6b7280;
@@ -95,6 +96,27 @@
   --z-popover: 1050;
   --z-tooltip: 1060;
   --z-toast: 1070;
+}
+
+/* Dark Mode Variables */
+[data-theme='dark'] {
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+
+  --color-border: #334155;
+  --color-border-hover: #475569;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
 }
 
 /* Reset básico */

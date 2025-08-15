@@ -152,8 +152,9 @@ export const createTask = async (
     } else {
       const statusCode =
         result.error?.includes('not found') ||
-        result.error?.includes('no pertenece')
-          ? 400
+        result.error?.includes('no pertenece') ||
+        result.error?.includes('Due date must be in the future')
+          ? 422
           : 500;
 
       res.status(statusCode).json({
@@ -161,7 +162,7 @@ export const createTask = async (
         error: {
           message: result.error,
           type:
-            statusCode === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
+            statusCode === 422 ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
           statusCode,
           timestamp: new Date().toISOString(),
         },
@@ -237,8 +238,9 @@ export const updateTask = async (
           ? 404
           : result.error?.includes('not found') ||
               result.error?.includes('no pertenece') ||
-              result.error?.includes('No hay datos')
-            ? 400
+              result.error?.includes('No hay datos') ||
+              result.error?.includes('Due date must be in the future')
+            ? 422
             : 500;
 
       res.status(statusCode).json({
@@ -248,7 +250,7 @@ export const updateTask = async (
           type:
             statusCode === 404
               ? 'NOT_FOUND'
-              : statusCode === 400
+              : statusCode === 422
                 ? 'VALIDATION_ERROR'
                 : 'INTERNAL_SERVER_ERROR',
           statusCode,

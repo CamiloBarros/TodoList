@@ -1,0 +1,29 @@
+/* Dashboard Layout Styles */
+.dashboardLayout {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+.mainContent {
+  padding-top: 0;
+  min-height: calc(100vh - 70px); /* Adjust based on navbar height */
+  transition: all 0.3s ease;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .dashboardLayout {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .mainContent {
+  background: #0f172a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mainContent {
+    min-height: calc(100vh - 80px); /* Adjust for mobile navbar height */
+  }
+}
