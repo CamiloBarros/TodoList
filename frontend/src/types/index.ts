@@ -89,12 +89,15 @@ export interface TaskUpdate {
 
 // Types for filters and queries
 export interface TaskFilters {
-  category_id?: number
+  category_id?: number // deprecated, use 'category' for backend compatibility
+  category?: number // para el backend
   completed?: boolean
   priority?: 'low' | 'medium' | 'high'
-  tag_id?: number
+  tag_id?: number // deprecated, use 'tags' for backend compatibility
+  tags?: string // IDs separados por coma, para el backend
   date_from?: string
   date_to?: string
+  search?: string
 }
 
 export interface PaginationParams {

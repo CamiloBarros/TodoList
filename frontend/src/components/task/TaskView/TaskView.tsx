@@ -13,7 +13,7 @@ interface TaskViewProps {
 }
 
 type ViewMode = 'grid' | 'list'
-type SortOption = 'created' | 'due_date' | 'priority' | 'title'
+type SortOption = 'created' | 'due_date' | 'priority' | 'title' | 'category'
 type FilterOption = 'all' | 'pending' | 'completed' | 'overdue' | 'today'
 
 const FILTER_LABELS = {
@@ -90,6 +90,14 @@ export const TaskView: React.FC<TaskViewProps> = ({
 
         case 'title':
           return a.title.localeCompare(b.title)
+
+        case 'category': {
+          const catA = a.category?.name?.toLowerCase() || ''
+          const catB = b.category?.name?.toLowerCase() || ''
+          if (catA < catB) return -1
+          if (catA > catB) return 1
+          return 0
+        }
 
         case 'created':
         default:
@@ -176,6 +184,7 @@ export const TaskView: React.FC<TaskViewProps> = ({
               <option value='due_date'>Due Date</option>
               <option value='priority'>Priority</option>
               <option value='title'>Title</option>
+              <option value='category'>Category</option>
             </select>
             <SortAsc size={16} className={styles.sortIcon} />
           </div>

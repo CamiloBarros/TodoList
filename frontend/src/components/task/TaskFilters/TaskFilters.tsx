@@ -18,7 +18,7 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
 }) => {
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(filters.search || '')
 
   useEffect(() => {
     const loadData = async () => {
@@ -64,6 +64,7 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
 
   const handleReset = () => {
     setSearchTerm('')
+    onFiltersChange({ ...filters, search: undefined })
     onReset()
   }
 
@@ -107,7 +108,10 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
           type='text'
           placeholder='Search tasks...'
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value)
+            onFiltersChange({ ...filters, search: e.target.value || undefined })
+          }}
           icon={<Search size={16} />}
           className={styles.searchInput}
         />
@@ -139,10 +143,10 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
       <div className={styles.filterGroup}>
         <Select
           options={categoryOptions}
-          value={filters.category_id?.toString() || ''}
+          value={filters.category?.toString() || ''}
           onChange={(value) =>
             handleFilterChange(
-              'category_id',
+              'category',
               value === '' ? undefined : Number(value)
             )
           }
@@ -153,12 +157,9 @@ const TaskFiltersComponent: React.FC<TaskFiltersProps> = ({
       <div className={styles.filterGroup}>
         <Select
           options={tagOptions}
-          value={filters.tag_id?.toString() || ''}
+          value={filters.tags || ''}
           onChange={(value) =>
-            handleFilterChange(
-              'tag_id',
-              value === '' ? undefined : Number(value)
-            )
+            handleFilterChange('tags', value === '' ? undefined : value)
           }
           placeholder='Tag'
         />
